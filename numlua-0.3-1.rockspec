@@ -2,8 +2,8 @@ package = "NumLua"
 version = "0.3-1"
 
 source = {
-  url = "http://...",
-  md5 = "f00",
+  url = "https://github.com/downloads/carvalho/numlua/numlua-0.3-1.tar.gz",
+  md5 = "abc29945daadd1499c7596ebbfb0f88a",
   dir = "numlua-0.3"
 }
 
@@ -23,7 +23,7 @@ description = {
     matrix package draws most of its numeric intensive routines from Netlib's
     ubiquitous BLAS and LAPACK packages.
   ]],
-  homepage = "http://numlua.luaforge.net",
+  homepage = "https://github.com/carvalho/numlua",
   license = "MIT"
 }
 
