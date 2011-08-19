@@ -56,12 +56,13 @@ Debian/Ubuntu systems, for example, you would typically just need to issue
 since the dirs happen to be system defaults. Similarly, on Mac OS X using
 `fink`,
 
-        $ fink install blas lapack fftw3-dev hdf5-dev
+        $ fink install atlas-shlibs fftw3-shlibs hdf5-shlibs
         $ luarocks HDF5_DIR=/sw FFTW3_DIR=/sw make numlua-0.3-1.rockspec
 
-Note that optimized libraries could have been used instead: `ATLAS` instead of
-the vanilla BLAS/LAPACK, for instance. In this case, you need to change the
-rockspec to match your libraries.
+Note that ATLAS optimized libraries are being used here, instead of the
+vanilla BLAS/LAPACK (a similar package exists in `apt`.) In this case, you
+need to change the rockspec to match your libraries.
+
 
 ### Building on Windows ###
 
@@ -77,7 +78,7 @@ steps:
       `add_flags(extras, "-l%s", libraries)` in `compile_library` at
       `c:\LuaRocks\2.0\lua\luarocks\build\builtin.lua`
 
-  3. Download BLAS/LAPACK from Netlib and build:
+  3. Download BLAS/LAPACK (note: _unoptimized_!) from Netlib and build:
     * Copy `make.inc.example` to `make.inc`, set `PLAT=`, and remove the `-g`
       flags and add `-O2` in `OPTS`
     * Now build: `cd install && make`, `cd blas\src && make`, `cd src && make`
@@ -90,13 +91,13 @@ steps:
   5. Download the binary distribution of HDF5.
     * Patch `include/H5public.h` by adding:
 
-        #undef H5_SIZEOF_SSIZE_T
-        #define H5_SIZEOF_SSIZE_T H5_SIZEOF_LONG
+          #undef H5_SIZEOF_SSIZE_T
+          #define H5_SIZEOF_SSIZE_T H5_SIZEOF_LONG
 
     * Wrap the dll for MinGW:
 
-        pexports hdf5dll.dll > hdf5dll.def
-        dlltool -d hdf5dll.def -l libhdf5.a
+          pexports hdf5dll.dll > hdf5dll.def
+          dlltool -d hdf5dll.def -l libhdf5.a
 
     * Put `hdf5dll.dll`, `zlib1.dll`, and `szip.dll` in your `PATH`
 
