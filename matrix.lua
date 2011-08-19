@@ -198,28 +198,43 @@ function matrix.list (m)
   end
 end
 
-local function prettyaux (v, ml) -- print vector with max length ml
-  local t = {}
-  for i = 1, #v do
-    local vi = tostring(v[i])
-    t[i] = (" "):rep(3 + ml - #vi) .. vi
-  end
-  return table.concat(t)
+
+local function formatnumber (x, d)
+  local fmt = d and ("%." .. d .. "f") or "%g"
+  return fmt:format(x)
 end
 
-function matrix.pretty (m)
-  assert(size(checkmatrix(m), "#") <= 2, "two-dimensional matrix expected")
-  local ml = 0 -- max length
-  for _, e in m:entries(true) do
-    local s = #tostring(e)
-    if ml < s then ml = s end
+local signbit = mathx.signbit
+local function formatcomplex (c, d)
+  local re, im = c:real(), c:imag()
+  local fmt = signbit(im) and "%s%si" or "%s+%si"
+  return fmt:format(formatnumber(re, d), formatnumber(im, d))
+end
+
+local function getmaxlen (fmt, d)
+  return function (l, e) return max(l, #fmt(e, d)) end
+end
+
+local tconcat = table.concat
+local function prettyaux (v, ml, fmt, d) -- print vector with max length ml
+  local t = {}
+  for i = 1, #v do
+    local vi = fmt(v[i], d)
+    t[i] = (" "):rep(3 + ml - #vi) .. vi
   end
+  return tconcat(t)
+end
+
+function matrix.pretty (m, d) -- `d` is number of decimal places
+  assert(size(checkmatrix(m), "#") <= 2, "two-dimensional matrix expected")
+  local fmt = m:iscomplex() and formatcomplex or formatnumber
+  local ml = m:fold(getmaxlen(fmt, d), 0) -- max length
   if size(m, "#") == 1 then
-    return prettyaux(m, ml)
+    return prettyaux(m, ml, fmt, d)
   else -- m:size"#" == 2
     local t = {}
-    for i = 1, #m do t[i] = prettyaux(m[i], ml) end
-    return table.concat(t, "\n")
+    for i = 1, #m do t[i] = prettyaux(m[i], ml, fmt, d) end
+    return tconcat(t, "\n")
   end
 end
 

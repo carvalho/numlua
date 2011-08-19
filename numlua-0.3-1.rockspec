@@ -34,6 +34,7 @@ dependencies = {
 external_dependencies = {
   FFTW3 = { header = "fftw3.h" },
   HDF5 = { header = "hdf5.h" },
+  LAPACK = { library = "lapack" }, -- actually, blas and lapack
 }
 
 build = {
@@ -46,6 +47,7 @@ build = {
         "dcdflib.c", "ipmpar.c", "stat.c", -- stat
         "amos.c", "mathx.c", -- C99 math
       },
+      -- header files for blas/lapack are already included
       incdirs = {"$(FFTW3_INCDIR)", "$(HDF5_INCDIR)"},
       -- assume blas is in same libdir as lapack
       libdirs = {"$(FFTW3_LIBDIR)", "$(HDF5_LIBDIR)", "$(LAPACK_LIBDIR)"},

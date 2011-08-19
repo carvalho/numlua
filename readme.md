@@ -56,8 +56,8 @@ Debian/Ubuntu systems, for example, you would typically just need to issue
 since the dirs happen to be system defaults. Similarly, on Mac OS X using
 `fink`,
 
-        $ fink install atlas-shlibs fftw3-shlibs hdf5-shlibs
-        $ luarocks HDF5_DIR=/sw FFTW3_DIR=/sw make numlua-0.3-1.rockspec
+        $ fink install atlas fftw3 hdf5
+        $ luarocks HDF5_DIR=/sw FFTW3_DIR=/sw LAPACK=/sw make numlua-0.3-1.rockspec
 
 Note that ATLAS optimized libraries are being used here, instead of the
 vanilla BLAS/LAPACK (a similar package exists in `apt`.) In this case, you
