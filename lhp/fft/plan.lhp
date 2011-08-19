@@ -1,0 +1,22 @@
+Help [=[
+
+fft.plan(m [ [, inverse], flag])
+--------------------------------
+
+Returns a FFTW plan that uses matrix `m` as a buffer to apply discrete
+transforms _in-place_ in `m`. If `m` is complex, a fast Fourier transform
+is executed, otherwise, if `m` is real, a discrete cosine transform is
+performed. If `inverse` is **true**, _normalized_ inverse transforms are
+computed.
+
+Parameter `flag` specifies a planner flag. Possible values are available in
+table `fft.flag`. The default flag is `fft.flag["measure"]`, `FFTW_MEASURE`.
+Note that only `"estimate"` (`FFTW_ESTIMATE`) and `"wisdomonly"`
+(`FFTW_WISDOM_ONLY`) do _not_ overwrite buffer `m`; for all other flags, `m`
+has to be initialized _after_ the plan is created.
+
+If `plan = fft.plan(m, ...)`, `#plan` returns `m` and `plan()` executes the
+plan.
+
+__See also__: `matrix.fft`, `matrix.fct`
+]=]

@@ -1,0 +1,17 @@
+Help [=[
+
+matrix.mmul (C, A, B [, transA, transB, alpha])
+-----------------------------------------------
+
+For conformable matrices `A`, `B`, and `C`, updates `C` with the
+multiplication `C = C + alpha * transA(A) * transB(B)`. Parameters `transA`
+and `transB` specify possible operations for `A` and `B`:
+
+  * `"n"` or `"N"` does nothing (default);
+  * `"t"` or `"T"` takes the transpose;
+  * `"c"` or `"C"` takes the conjugate transpose.
+
+If `B` is a vector, `transB` is ignored. Moreover, `A` can only be a vector if
+`B` is also a vector, in which case the outer product `A * B^H` is computed
+regardless of `transA` and `transB`.
+]=]

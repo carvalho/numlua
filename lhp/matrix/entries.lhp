@@ -1,0 +1,25 @@
+Help [=[
+
+matrix.entries(m [, eorder])
+----------------------------
+
+Returns an iterator over the entries of `m` so that the following construction
+iterates over the entries of `m`:
+
+        for i1, i2, ..., in, e in m:entries() do
+          -- body
+        end
+
+Here `n = m:size"#"` is the number of dimensions of `m` and
+`e = m[i1][i2]...[in]` takes the value of each entry in `m`.
+
+This construction is semantically equivalent to
+
+        for i = 1, m:size"*" do
+          local i1, i2, ..., in = m:eindex(i)
+          local e = m:get(i1, i2, ..., in)
+          -- body
+        end
+
+__See also__: `matrix.eindex`
+]=]

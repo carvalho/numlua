@@ -1,0 +1,22 @@
+Help [=[
+
+matrix.linspace(a, b [, n])
+---------------------------
+
+Returns a vector `v` of length `n` -- taken to be `int(|b - a| + 1)` if not
+specified -- such that `v[i] = (i - 1) * s` where `s` is `(b - a) / (n - 1)`,
+and so `v[1] = a` and `v[n] = b`.
+
+Examples:
+
+        v = linspace(1, n) -- v = 1:n
+
+        function arith (a, r, n)
+          return linspace(a, r * (n - 1) + a, n)
+        end
+
+        function seq (a, b, step)
+          local n = floor(abs((b - a) / s + 1))
+          return linspace(a, b, n)
+        end
+]=]

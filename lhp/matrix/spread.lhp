@@ -1,0 +1,8 @@
+Help [=[
+
+matrix.spread(m [, dim [, count]])
+----------------------------------
+
+Returns a replicated version of `m` along dimension `d` (defaults to 1)
+`count` number of times (defaults to 1).
+]=]

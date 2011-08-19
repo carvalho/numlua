@@ -1,0 +1,14 @@
+Help [=[
+
+stat.dbeta(x, a, b)
+stat.pbeta(x, a, b)
+stat.qbeta(p, a, b)
+-------------------
+
+Computes the density (`dbeta`), cumulative distribution function (`pbeta`), and
+inverse cdf (`qbeta`) for the *beta* distribution with parameters `a >= 0` and
+`b >= 0`. The density is given by `x^(a - 1) * (1 - x)^(b - 1) / B(a, b)` for
+`0 <= x <= 1`, where `B(a, b)` is the beta function.
+
+__See also__: `mathx.beta`
+]=]

@@ -1,0 +1,33 @@
+Help [=[
+
+matrix.section(m, section)
+--------------------------
+
+Returns a _section_ of matrix `m` according to table `section`. `section`
+is taken as a table with integer indices from 1 to `n`, the number of
+dimensions of `m`; the `i`-th value of `section` should contain another
+table specifying a _slice_ in the form `{first, last, step}`, where `first`
+and `step` default to 1 and `last` defaults to `m:size(i)`. The returned
+section is a _reference_ to `m`.
+
+A shortcut for `matrix.section(m, section)` is `m(section)`.
+
+Example:
+
+        -- assume a and b are real two-dimensional matrices
+        -- check `matrix.kronecker` for a more efficient version
+        function kronecker (a, b)
+          local ra, ca = a:shape()
+          local rb, cb = b:shape()
+          local x = matrix.new(ra * rb, ca * cb)
+          for i = 1, ra do
+            for j = 1, ca do
+              x{{(i-1)*rb+1, i*rb}, {(j-1)*cb+1, j*cb}}._ = b * a[i][j]
+            end
+          end
+          return x
+        end
+
+
+__See also__: `matrix.slice`
+]=]

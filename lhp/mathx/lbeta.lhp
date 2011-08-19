@@ -1,0 +1,13 @@
+Help [=[
+
+mathx.beta(x, y)
+mathx.lbeta(x, y)
+-----------------
+
+Computes the beta function `B` with arguments `x` and `y` and its logarithm
+(`beta` and `lbeta` respectively.) The beta function is defined by
+`B(x, y) = integral_0^1 t^(x - 1) (1 - t)^(y - 1) dt`, or, equivalently, by
+`B(x, y) = G(x) * G(y) / G(x + y)` where `G` is the gamma function.
+
+__See also__: `mathx.gamma`, `mathx.lgamma`
+]=]

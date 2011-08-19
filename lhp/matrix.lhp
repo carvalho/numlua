@@ -1,0 +1,131 @@
+Help [=[
+
+matrix
+======
+
+The `matrix` module implements multidimensional matrices. New `matrix` objects
+are created by specifying dimensions with `matrix.new` (uninitialized),
+`matrix.zeros` or `matrix.ones` (filled with zeros or ones), or by directly
+specifying entries in a table and using `matrix` (or `matrix.fromtable`.)
+Matrices can be real or complex, which can be set in the last argument of
+these functions. To retrieve the dimensions of a matrix use `matrix.shape` or
+`matrix.size`; in particular, `m:size"#"` returns the number of dimensions of
+a matrix `m`.
+
+To access and set entries in a matrix `m` with `n` dimensions you can simply
+use `m[i1]...[in]`; for example, to set the entry at row `i` and column `j` of
+a two-dimensional matrix you can use `m[i][j] = x`. Alternatively, you can use
+`matrix.get` and `matrix.set`. These two functions can also be used to
+produce a _reference_ to a submatrix and to assign whole submatrices; as an
+example, `m:set(a)` assigns `a` to `m`, either element-wise if `a` is a
+conformable matrix or by filling `m` with `a` if `a` is a number or complex.
+You can also use `matrix.copy` to copy a matrix. More general matrix
+references can be created with `matrix.section` or `matrix.slice`.
+
+Entries in a matrix can be set more systematically using functional
+facilities: `matrix.apply` sets entries based on a function that takes indices
+as arguments while `matrix.map` takes a function on entries. Both functions
+operate _in-place_ and in _element-order_, that is, in column-major order
+(first indices vary faster.) Element-order is also respected when iterating on
+a matrix with `matrix.entries`.
+
+Logical methods -- `matrix.find`, `matrix.ifelse`, and `matrix.which` -- are
+helpful for filtering matrix entries. These functions always take a
+_condition_ argument, which can be: a boolean function on each entry; or, if a
+number `x`, the boolean function `function (e) return e == x end`; or, if a
+conformable matrix `x`, `function (e) return e == ex end` where `ex` is the
+entry in `x` at the same element-order index of `e`, and so, a boolean
+function for element-wise comparison. The condition argument defaults to
+`function (e) return e ~= 0 end`.
+
+Common mathematical operations can be carried using `matrix.map` but for
+convenience `matrix` provides the following functions:
+
+          abs    acos    acosh    asin    asinh    atan
+        atanh     cos     cosh     exp      log     sin
+         sinh    sqrt      tan    tanh 
+
+All these functions take an optional second argument -- whose default value is
+given by `numlua.opmode` -- that specifies if the operation should be
+in-place. Thus, calling `m:f()` where `f` is any of the functions above, is
+semantically equivalent to `matrix.map(inplace and m or m:copy(), f)`.
+
+Arithmetical methods `matrix.add`, `matrix.mul`, `matrix.div`, and
+`matrix.pow` operate element-wise and accept an optional last argument that
+signals in-place application to the first argument. Matrix multiplication is
+implemented in three specialized methods: `matrix.mmul` for general matrix
+multiplication, `matrix.hemul` for Hermitian matrix multiplication, and
+`matrix.trmul` for triangular matrix multiplication. Arithmetical metamethods
+are, not surprisingly, based on these methods and should work as expected:
+`__add` and `__sub` are based on `matrix.add`, `__mul` is based on
+`matrix.mul` (for scalars) and `matrix.mmul`, `__mod` is `matrix.ls` (left
+division), and `__div` is based on `matrix.div` or `matrix.ls` for right
+division (`a / b` is equivalent to `t(t(b) % t(a))` when `a` and `b` are
+conformable matrices, where `t` is `matrix.t`, the transpose operator.)
+
+Note however, that even though metamethods make the code cleaner and more
+intuitive, it is often computationally more efficient to use the basic methods
+to avoid creation of temporary matrices. Here is a quick example:
+
+        -- updates invA to inv(A + u * v') according to the
+        -- Sherman-Morrison formula: inv(A + u * v') = inv(A)
+        --          - (inv(A) * u * v' * inv(A)) / (1 + v' * inv(A) * u)
+        function shermanmorrison (invA, u, v)
+          local x = v * invA -- v' * inv(A)
+          return invA:copy():mmul(invA * u, x, "n", "n", -1 / (1 + dot(x, u)))
+        end
+
+The next function is equivalent,
+
+        function naiveshermanmorrison (invA, u, v)
+          local x = v * invA -- v' * inv(A)
+          return invA - invA * u * x / (1 + dot(x, u))
+        end
+
+but creates two extra temporary matrices: one from `t = (invA * u) * x` and
+other from `t / (1 + dot(x,u))`.
+
+While favoring in-place operations can help avoid temporary object creation,
+the adoption of `numlua.opmode` can make notation lighter and less functional.
+It should be used with care, however, since operations being applied to the
+first argument of the methods break operation commutativity; for instance,
+while both `matrix.add(a, b)` and `matrix.add(b, a)` return a new matrix `c =
+a + b`, `matrix.add(a, b, true)` stores -- or better, applies -- the result in
+`a` and `matrix.add(b, a, true)` stores the result in `b`. Another example:
+
+        function sweep (a, k)
+          local ck = a:col(k)
+          local b = ck:copy()
+          local ak, d = a[k], b[k]
+          ak:div(d, false, true) -- a[k] = a[k] / b[k], in-place
+          for i = 1, #a do
+            if i ~= k then
+              a[i]:add(ak, -b[i], true) -- a[i] = a[i] - b[i] * a[k], in-place
+            end
+          end
+          ck._ = b:div(-d, false, true) -- ck = b, b = -b / d in-place
+          ck[k] = 1 / d
+          return a
+        end
+
+and now using in-place operations by default and metamethods:
+
+        numlua.opmode(true) -- in-place
+        function sweep (a, k)
+          local ck = a:col(k)
+          local b = ck:copy()
+          local ak, d = a[k], b[k]
+          ak = ak / d
+          for i = 1, #a do
+            if i ~= k then
+              a[i]:add(ak, -b[i]) -- a[i] = a[i] - ak * b[i]
+            end
+          end
+          ck._ = b / (-d) -- equivalent to ck:set(b / (-d))
+          ck[k] = 1 / d
+          return a
+        end
+
+Finally, matrices can be serialized (in HDF5 format) using `matrix.save` and
+retrieved using `matrix.load`.
+]=]

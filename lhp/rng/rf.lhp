@@ -1,0 +1,11 @@
+Help [=[
+
+rng.rf(dfn, dfd [, xnonc [, dest]])
+-----------------------------------
+
+Returns random deviates from the F distribution with degrees of freedom
+`dfn` and `dfd` (`dfn > 0` and `dfd > 0`) and optional non-centrality
+parameter `xnonc` (`xnonc >= 0`, defaults to zero).
+
+__See also__: `stat.df`
+]=]

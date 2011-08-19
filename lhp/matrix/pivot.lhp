@@ -1,0 +1,33 @@
+Help [=[
+
+matrix.pivot(m, pvt [, colpivot [, inplace]])
+---------------------------------------------
+
+Given pivot vector `pvt`, returns a new matrix `p` with the same rows of
+`m` but with rows `i` and `pvt[i]` swapped. Note that, in particular,
+`p = P * m`, where `P = eye(#m):pivot(pvt)`, that is, `P` is the
+permutation matrix for `pvt`.
+
+If `colpivot` is **true**, columns are swapped instead of rows, that is,
+returns `p = m * P` where `P = eye(#m):pivot(pvt, true)`.
+
+If `inplace` is **true**, rows/columns are swapped _in-place_.
+
+Examples:
+
+        function perm (p) -- column permutation
+          local n = #p
+          local s = matrix.linspace(1, n):pivot(p)
+          local P = matrix.zeros(n, n)
+          for i = 1, n do P[i][s[i]] = 1 end
+          return P
+        end
+
+        -- see `matrix.lu` and `matrix.qr` for details: 
+        require "numlua.seeall"
+        l, u, p = lu(a)
+        print(pretty(perm(p) * a)) -- = a:pivot(p)) = l * u
+        q, r, p = qr(a,true)
+        print(pretty(q * r * t(perm(p)))) -- = (q * r):pivot(p,true) = a
+
+]=]

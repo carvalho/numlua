@@ -1,0 +1,15 @@
+Help [=[
+
+matrix.copy(m [, x])
+--------------------
+
+Returns a copy of `m` and optionally sets its content to `x`, a number.
+`matrix.copy` is semantically equivalent to
+
+        function matrix.copy (m, x)
+          local c = matrix.new(matrix.shape(m, 1, true)) -- frame
+          return set(c, x or m)
+        end
+
+__See also__: `matrix.set`
+]=]

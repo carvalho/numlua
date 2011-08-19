@@ -1,0 +1,40 @@
+Help [=[
+
+matrix.chol(A [, what [, inplace]])
+-----------------------------------
+
+Computes the Cholesky factorization of symmetric positive-definite matrix `A`.
+Parameter `what` defines the computation:
+
+  * If `what == "l"` or `what == "L"`, the default value, references only the
+    lower triangle of `A` and returns a lower triangular matrix `L` such that
+    `A = L * L^H`;
+  * If `what == "u"` or `what == "U"`, references only the upper triangle of
+    `A` and returns an upper triangular matrix `U` such that `A = U^H * U`.
+
+If an internal error occurs, returns **nil** and an error message; if `A` is
+not positive-definite, returns **false** and a warning message. If `inplace`
+is **true**, overwrites `A` with its Cholesky factor.
+
+Examples:
+
+        function matrix.isposdef (m)
+          local c, msg = chol(m)
+          if c == nil then error(msg) end
+          return not c == false
+        end
+
+        -- generates multivariable normal deviates (also check rng.rmvnorm)
+        function mvnorm (mu, S)
+          local L = assert(chol(S, "L")) -- Cholesky factor: S = L * L^T
+          return function (dest)
+            local dest = dest or zeros(#mu)
+            local s = rnorm(0, 1, dest) -- s ~ N(0, I_n)
+            s = trmul(s, L) -- s = L * s, s ~ N(0, S)
+            s = add(s, mu, true) -- s = s + mu, s ~ N(mu, S)
+            return s
+          end
+        end
+
+__See also__: `matrix.hemul`, `matrix.trmul`
+]=]

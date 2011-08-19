@@ -1,0 +1,16 @@
+Help [=[
+
+matrix.size(m [, index])
+------------------------
+
+Returns the size of `m`, depending on parameter `index`:
+
+  * if `index` is a number, returns the size of the `index`-th dimension of
+    `m`
+  * if `index == "#"`, returns the number of dimensions of `m`
+  * if `index == "*"`, returns the total number of elements of `m`
+
+The default value for `index` is 1.
+
+__See also__: `matrix.shape`
+]=]

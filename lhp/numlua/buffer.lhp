@@ -1,0 +1,12 @@
+Help [=[
+
+numlua.buffer(opt [, arg])
+--------------------------
+
+Operates on Numlua buffer according to `opt`:
+
+  * `"release"`: release all buffers with size at least `arg`; `arg` defaults
+    to 0.
+  * `"status"`: returns the total size and number of buffers that are _busy_
+    if `arg` is **true** or _free_ otherwise.
+]=]

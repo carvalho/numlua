@@ -1,0 +1,16 @@
+Help [=[
+
+mathx.airyb (z, deriv, scaling)
+-------------------------------
+
+Returns the complex Airy function _Bi(z)_ or its derivative if `deriv` is
+**true**, and a completion `status`. If `scaling` is **true**, returns
+_Bi(z) * exp(-abs(real(zeta)))_ where _zeta = 2 / 3 * z * sqrt(z)_, to
+remove the exponential behavior in both the left and right half planes.
+
+If `status` is **true**, the return is normal, that is, the computation
+completed without errors, underflows, or overflows; otherwise, `status` is
+an error message. If no computation is performed, **nil** is returned.
+
+__See also__: `mathx.airya`
+]=]

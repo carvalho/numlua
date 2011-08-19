@@ -1,0 +1,24 @@
+Help [=[
+
+factor.fold(f, m, func [, init])
+--------------------------------
+
+Folds the entries in matrix `m` according to the levels in factor `f` and
+fold function `func`, that is, for each key level `l`, returns a vector `v`
+such that `v[l] = func(m[i1], func(m[i2], func(..., func(m[in], init)...)))`
+where `i1, ..., in` satisfy `f(i1) = ... = f(in) = l`. The default value for
+`init` is zero.
+
+Example:
+
+        > f = stat.factor{"a", "c", "a", "a", "b", "c"}
+        > add2 = function(x, y) return x + y end
+        > x = matrix.linspace(1, (#f):sum())
+        > for l, v in f:fold(x, add2):entries() do print(l, v) end
+        1       8
+        2       8
+        3       5
+
+
+__See also__: `stat.factor`, `factor.partition`
+]=]

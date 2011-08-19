@@ -1,0 +1,12 @@
+Help [=[
+
+stat.dexp(x [, r])
+stat.pexp(x [, r])
+stat.qexp(p [, r])
+------------------
+
+Computes the density (`dexp`), cumulative distribution function (`pexp`),
+and inverse cdf (`qexp`) for the *exponential* distribution with rate `r`.
+The default value for `r` is one. The exponential distribution has density
+`r * exp(-r * x)`.
+]=]

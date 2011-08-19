@@ -1,0 +1,9 @@
+Help [=[
+
+matrix.dot(a, b [, trans])
+--------------------------
+
+Computes the dot product of conformable matrices `a` and `b`, `a^H b` as
+the sum of their element-wise product. If `trans` is **true**, the
+conjugate of `a` is _not_ used (and so `a^T b` is actually computed.)
+]=]

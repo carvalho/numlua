@@ -1,0 +1,12 @@
+Help [=[
+
+matrix.complex(a [, b])
+-----------------------
+
+Returns a _complex_ matrix `m` such that `real(m) = real(a)` and
+`imag(m) = imag(b)`. The default value for `b` is `a`, so, in particular,
+`complex(a)` returns a copy of `a` if `a` is complex. An error is raised if
+`a` and `b` are not conformable.
+
+__See also__: `matrix.real`, `matrix.imag`
+]=]

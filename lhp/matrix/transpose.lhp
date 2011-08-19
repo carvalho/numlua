@@ -1,0 +1,8 @@
+Help [=[
+
+matrix.transpose (m [, hermitian])
+------------------------------------
+
+Returns the transpose of matrix `m`. If `hermitian` is **true**, returns the
+conjugate transpose of `m`.
+]=]

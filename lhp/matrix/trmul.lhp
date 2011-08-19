@@ -1,0 +1,23 @@
+Help [=[
+
+matrix.trmul (x, A [, uplo [, invert [, trans [, side]]]])
+----------------------------------------------------------
+
+For conformable two-dimensional matrices `A` and `x`, `A` square, returns the
+result of `tri(A) * x` _in-place_ in `x`, where `tri(A)` takes the lower
+triangle section of `A` if `uplo == "l"` or `uplo == "L"`, or the upper
+triangle section of `A` if `uplo == "u"` or `uplo == "U"`. The default value
+for `uplo` is `"L"`.
+
+If `invert` is **true**, multiplies by the inverse of `A`.
+
+If `trans == "t"` or `trans == "T"`, returns `tri(A)^T * x`; if `trans == "c"`
+or `trans == "C"`, returns `tri(A)^H * x` (conjugate transpose); if
+`trans == "n"` or `trans == "N"`, does nothing (default behavior).
+
+If `side == "l"` or `side == "L"`, `A` is multiplied at the left of `x`
+(default); if `side == "r"` or `side == "R"`, `A` is multiplied at the right,
+that is, returns `x * tri(A)`.
+
+For examples, see `matrix.lu` and `matrix.qr`.
+]=]

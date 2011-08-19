@@ -1,0 +1,7 @@
+Help [=[
+
+rng.seed([seed])
+----------------
+
+Sets the seed of `rng` to `seed`; `seed` can be a number or a real vector.
+]=]

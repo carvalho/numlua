@@ -1,0 +1,11 @@
+Help [=[
+
+matrix.max(m)
+-------------
+
+Returns the _maximum_ element in `m` and the maximizing element-order index
+of `m`. Complex numbers are compared based on their real parts, and their
+imaginary parts are only used to break ties.
+
+__See also__: `matrix.min`, `matrix.sort`
+]=]

@@ -1,0 +1,31 @@
+Help [=[
+
+matrix.lu(A [, inplace])
+------------------------
+
+Computes the LU decomposition of `A`: returns an unit lower triangular matrix
+`L`, an upper triangular matrix `U` and a permutation vector `pvt` such that
+`A:pivot(pvt) = L * U`, or equivalently, `A = P^T * L * U` where
+`P = eye(#A):pivot(pvt)`. If `inplace` is **true**, both `L` and `U` are
+returned _in-place_ at `A`, `L` on the strict lower triangle and `U` on the
+upper triangle.
+
+Examples:
+
+        -- compute determinant of m
+        function det (m)
+          local c = assert(lu(copy(m), true)) -- in-place on copy
+          return prod(diag(c))
+        end
+
+        -- solve linear system A * x = b
+        function linsolve (A, b)
+          local l, u, p = lu(A)
+          local x = b:pivot(p) -- x = eye(#A):pivot(p) * b
+          x:trmul(l, 'l', true) -- x = inv(l) * x
+          x:trmul(u, 'u', true) -- x = inv(u) * x
+          return x
+        end
+
+__See also__: `matrix.pivot`
+]=]

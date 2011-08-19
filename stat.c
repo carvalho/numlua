@@ -1,3 +1,12 @@
+/* {=================================================================
+ *
+ * stat.c
+ * Statistical routines for NumericLua
+ * Luis Carvalho (lexcarvalho@gmail.com)
+ * See Copyright Notice in numlua.h
+ *
+ * ==================================================================} */
+
 #include <lua.h>
 #include <lauxlib.h>
 #include <float.h>
@@ -51,6 +60,201 @@ static double sferr_halves[31] = {
   0.005746216513010115682023589, /* 14.5 */
   0.005554733551962801371038690  /* 15.0 */
 };
+
+
+
+/* {=====================================================================
+ *    Factors
+ * ======================================================================} */
+
+typedef struct {
+  int size;
+  int nlevels;
+  unsigned char map[1];
+} nl_Factor;
+
+#define MAXLEVELS 255
+#define LEVELS 4
+#define MAP 5
+static int stat_factor (lua_State *L) {
+  int i, n = (int) lua_rawlen(L, 1);
+  nl_Factor *f;
+  unsigned char m, l = 0; /* # levels */
+  lua_settop(L, 1);
+  luaL_argcheck(L, n > 0, 1, "length must be positive");
+  f = (nl_Factor *) lua_newuserdata(L, sizeof(nl_Factor) + n - 1);
+  f->size = n;
+  f->nlevels = 0;
+  lua_pushvalue(L, -1);
+  lua_newtable(L); /* levels */
+  lua_newtable(L); /* map */
+  for (i = 0; i < n; i++) {
+    lua_pushinteger(L, i + 1);
+    lua_gettable(L, 1); /* t[i] */
+    lua_pushvalue(L, -1);
+    lua_gettable(L, MAP); /* map[t[i]] */
+    if (lua_isnil(L, -1)) { /* add level? */
+      if (f->nlevels == MAXLEVELS)
+        luaL_error(L, "maximum number of levels exceeded");
+      m = (unsigned char) ++f->nlevels;
+      lua_pop(L, 1); /* nil */
+      lua_pushvalue(L, -1); /* t[i] */
+      lua_pushinteger(L, (int) m);
+      lua_settable(L, MAP); /* map[t[i]] = m */
+      lua_rawseti(L, LEVELS, (int) m); /* levels[m] = t[i] */
+    }
+    else {
+      m = (unsigned char) lua_tointeger(L, -1);
+      lua_pop(L, 2); /* t[i], map[t[i]] */
+    }
+    f->map[i] = m - 1; /* zero based */
+  }
+  lua_pop(L, 1); /* map */
+  lua_rawset(L, lua_upvalueindex(1)); /* metatable[f] = levels */
+  lua_pushvalue(L, lua_upvalueindex(1)); /* metatable */
+  lua_setmetatable(L, 2);
+  return 1;
+}
+
+
+static int factor__tostring (lua_State *L) {
+  lua_pushfstring(L, "factor: %p", lua_touserdata(L, 1));
+  return 1;
+}
+
+static int factor__len (lua_State *L) {
+  nl_Factor *f = (nl_Factor *) lua_touserdata(L, 1);
+  nl_Matrix *l = nl_pushmatrix(L, 0, 1, &f->nlevels, 1, f->nlevels, NULL);
+  int i;
+  for (i = 0; i < l->size; i++) l->data[i] = 0;
+  for (i = 0; i < f->size; i++) l->data[f->map[i]]++;
+  return 1;
+}
+
+static int factor__call (lua_State *L) {
+  nl_Factor *f = (nl_Factor *) lua_touserdata(L, 1);
+  if (lua_gettop(L) == 1) /* levels? */
+    lua_rawget(L, lua_upvalueindex(1));
+  else {
+    int k = lua_tointeger(L, 2);
+    if (k < 1 || k > f->size)
+      lua_pushnil(L);
+    else
+      lua_pushinteger(L, (int) f->map[k - 1] + 1);
+  }
+  return 1;
+}
+
+static int factor__index (lua_State *L) {
+  nl_Factor *f = (nl_Factor *) lua_touserdata(L, 1);
+  if (lua_isnumber(L, 2)) {
+    int k = lua_tointeger(L, 2);
+    if (k < 1 || k > f->size)
+      lua_pushnil(L);
+    else {
+      lua_settop(L, 1);
+      lua_rawget(L, lua_upvalueindex(1));
+      lua_rawgeti(L, -1, (int) f->map[k - 1] + 1);
+    }
+  }
+  else /* meta lookup? */
+    lua_rawget(L, lua_upvalueindex(2));
+  return 1;
+}
+
+
+static int factor_fold (lua_State *L) {
+  nl_Factor *f = (nl_Factor *) lua_touserdata(L, 1);
+  nl_Matrix *r, *m = nl_checkmatrix(L, 2);
+  nl_Complex c = nl_optcomplex(L, 4, 0);
+  int i;
+  luaL_argcheck(L, m->size == f->size, 2, "inconsistent sizes");
+  luaL_argcheck(L, !m->section, 2, "sections are not allowed");
+  luaL_argcheck(L, lua_type(L, 3) == LUA_TFUNCTION, 3,
+      "function expected");
+  lua_settop(L, 4);
+  /* result vector: */
+  r = nl_pushmatrix(L, m->iscomplex, 1, &f->nlevels, 1, f->nlevels, NULL);
+  /* fold: */
+  if (r->iscomplex) {
+    for (i = 0; i < f->nlevels; i++) /* init result */
+      CPX(r->data)[i] = c;
+    for (i = 0; i < f->size; i++) {
+      lua_pushvalue(L, 3); /* function */
+      nl_pushcomplex(L, CPX(r->data)[f->map[i]]);
+      nl_pushcomplex(L, CPX(m->data)[i]);
+      lua_call(L, 2, 1);
+      CPX(r->data)[f->map[i]] = nl_optcomplex(L, -1, 0);
+      lua_pop(L, 1);
+    }
+  }
+  else {
+    for (i = 0; i < f->nlevels; i++) /* init result */
+      r->data[i] = creal(c);
+    for (i = 0; i < f->size; i++) {
+      lua_pushvalue(L, 3); /* function */
+      lua_pushnumber(L, r->data[f->map[i]]);
+      lua_pushnumber(L, m->data[i]);
+      lua_call(L, 2, 1);
+      r->data[f->map[i]] = luaL_optnumber(L, -1, 0);
+      lua_pop(L, 1);
+    }
+  }
+  return 1;
+}
+
+static int factor_partition (lua_State *L) {
+  nl_Factor *f = (nl_Factor *) lua_touserdata(L, 1);
+  nl_Matrix *m = nl_checkmatrix(L, 2);
+  nl_Matrix *r[MAXLEVELS];
+  int i, l[MAXLEVELS];
+  luaL_argcheck(L, m->size == f->size, 2, "inconsistent sizes");
+  luaL_argcheck(L, !m->section, 2, "sections are not allowed");
+  /* process level counts */
+  for (i = 0; i < f->nlevels; i++) l[i] = 0;
+  for (i = 0; i < f->size; i++) l[f->map[i]]++;
+  /* create partition vectors */
+  lua_newtable(L);
+  for (i = 0; i < f->nlevels; i++) { /* init vectors and counts */
+    r[i] = nl_pushmatrix(L, m->iscomplex, 1, &l[i], 1, l[i], NULL);
+    l[i] = 0;
+    lua_rawseti(L, -2, i + 1);
+  }
+  if (m->iscomplex) {
+    for (i = 0; i < f->size; i++)
+      CPX(r[f->map[i]]->data)[l[i]++] = CPX(m->data)[i];
+  }
+  else {
+    for (i = 0; i < f->size; i++) {
+      int k = f->map[i];
+      r[k]->data[l[k]++] = m->data[i];
+    }
+  }
+  return 1;
+}
+
+static int factor_design (lua_State *L) {
+  nl_Factor *f = (nl_Factor *) lua_touserdata(L, 1);
+  int i, j, ref = luaL_optinteger(L, 2, 0);
+  nl_Matrix *m;
+  lua_Number *e;
+  luaL_argcheck(L, ref >= 0 || ref <= f->nlevels, 2,
+      "invalid reference class");
+  m = nl_pushmatrix(L, 0, 2, NULL, 1, f->nlevels * f->size, NULL);
+  m->dim[0] = f->size; m->dim[1] = f->nlevels;
+  ref--; /* zero based */
+  e = m->data;
+  for (i = 0; i < f->nlevels; i++) {
+    if (i == ref) {
+      for (j = 0; j < f->size; j++) *e++ = 1; /* intercept */
+    }
+    else {
+      for (j = 0; j < f->size; j++)
+        *e++ = (i == f->map[j]) ? 1 : -(ref == f->map[j]);
+    }
+  }
+  return 1;
+}
 
 
 /* {=====================================================================
@@ -169,72 +373,6 @@ static lua_Number pdhyper (lua_Number x, lua_Number r, lua_Number b,
   return 1 + s;
 }
 
-
-/* {=====================================================================
- *    Utils
- * ======================================================================} */
-
-/* computes log(1 + exp(x)) */
-#define LOGEPS (-37)
-static int stat_log1pe (lua_State *L) {
-  lua_Number x = luaL_checknumber(L, 1);
-  lua_Number d = (x > 0) ? -x : x;
-  d = (d < LOGEPS) ? 0 : log(1 + exp(d)); /* avoid calls if possible */
-  if (x > 0) d += x;
-  lua_pushnumber(L, d);
-  return 1;
-}
-
-static int stat_expm1 (lua_State *L) {
-  lua_Number x = luaL_checknumber(L, 1);
-  lua_pushnumber(L, dexpm1(&x) * x);
-  return 1;
-}
-
-static int stat_log1p (lua_State *L) {
-  lua_Number x = luaL_checknumber(L, 1);
-  lua_pushnumber(L, dln1px(&x));
-  return 1;
-}
-
-static int stat_lbeta (lua_State *L) {
-  lua_Number a = luaL_checknumber(L, 1);
-  lua_Number b = luaL_checknumber(L, 2);
-  lua_pushnumber(L, dlnbet(&a, &b));
-  return 1;
-}
-
-static int stat_lgamma (lua_State *L) {
-  lua_Number x = luaL_checknumber(L, 1);
-  lua_pushnumber(L, dlngam(&x));
-  return 1;
-}
-
-static int stat_psi (lua_State *L) {
-  lua_Number x = luaL_checknumber(L, 1);
-  lua_pushnumber(L, psi(&x));
-  return 1;
-}
-
-#define LEPS (-37)
-static lua_Number lse (lua_Number w1, lua_Number w2) {
-  lua_Number d, w;
-  if (w1 > w2) {
-    d = w2 - w1; w = w1;
-  }
-  else {
-    d = w1 - w2; w = w2;
-  }
-  if (d < LEPS) return w;
-  return w + log(1 + exp(d));
-}
-
-static int stat_lse (lua_State *L) {
-  lua_Number w1 = luaL_checknumber(L, 1);
-  lua_Number w2 = luaL_checknumber(L, 2);
-  lua_pushnumber(L, lse(w1, w2));
-  return 1;
-}
 
 /* {=====================================================================
  *    Functions
@@ -603,7 +741,7 @@ static int stat_qgamma (lua_State *L) {
 
 static void check_hyper (lua_State *L, lua_Number x, lua_Number r,
     lua_Number b, lua_Number n) {
-  luaL_argcheck(L, x >= 0, 1, "non-negative value expected");
+  luaL_argcheck(L, x >= 0 && x <= n, 1, "out of range");
   luaL_argcheck(L, r >= 0, 2, "non-negative value expected");
   luaL_argcheck(L, b >= 0, 3, "non-negative value expected");
   luaL_argcheck(L, n >= 0 && n <= b + r, 4, "out of range");
@@ -893,53 +1031,17 @@ static int stat_qt (lua_State *L) {
 
 
 /* {=====================================================================
- *    Statistical tests
+ *    Interface
  * ======================================================================} */
 
-#ifdef ALLDONE
-static int stat_shapiro (lua_State *L) {
-  int i, n, ifault;
-  lua_Number w, pw;
-  nBuffer *b;
-  luaL_checktype(L, 1, LUA_TTABLE);
-  n = luaL_getn(L, 1);
-  b = nl_getbuffer(L, n);
-  for (i=0; i<n; i++) {
-    lua_rawgeti(L, 1, i + 1);
-    b->data.bnum[i] = luaL_optnumber(L, -1, 0);
-    lua_pop(L, 1);
-  }
-  { /* shapiro */
-    int flag = 1;
-    int init = 0;
-    int n2 = n/2;
-    nBuffer *a = nl_getbuffer(L, n2);
-    w = 0;
-    ssort_(b->data.bnum, NULL, &n, &flag); /* FIXME */
-    swilk_(&init, b->data.bnum, &n, &n, &n2, a->data.bnum,
-        &w, &pw, &ifault); /* FIXME */
-    nl_freebuffer(a);
-  }
-  nl_freebuffer(b);
-  lua_pushnumber(L, (lua_Number) pw);
-  lua_pushnumber(L, (lua_Number) w);
-  lua_pushinteger(L, ifault);
-  return 3;
-}
-#endif
+static const luaL_Reg factor_lib[] = {
+  {"fold", factor_fold},
+  {"partition", factor_partition},
+  {"design", factor_design},
+  {NULL, NULL}
+};
 
-
-/* Interface */
-
-static const luaL_reg stat_lib[] = {
-  /* utils */
-  {"log1pe", stat_log1pe},
-  {"expm1", stat_expm1},
-  {"log1p", stat_log1p},
-  {"lbeta", stat_lbeta},
-  {"lgamma", stat_lgamma},
-  {"psi", stat_psi},
-  {"lse", stat_lse},
+static const luaL_Reg stat_lib[] = {
   /* probability dists */
   {"dbeta", stat_dbeta},
   {"pbeta", stat_pbeta},
@@ -973,15 +1075,33 @@ static const luaL_reg stat_lib[] = {
   {"dt", stat_dt},
   {"pt", stat_pt},
   {"qt", stat_qt},
-#ifdef ALLDONE
-  /* tests */
-  {"shapiro", stat_shapiro},
-#endif
   {NULL, NULL}
 };
 
 NUMLUA_API int luaopen_numlua_stat (lua_State *L) {
-  luaL_register(L, STAT_LIBNAME, stat_lib);
+  luaL_newlib(L, stat_lib);
+  /* factors: */
+  lua_newtable(L); /* factor mt */
+  lua_newtable(L); /* mt */
+  lua_pushliteral(L, "k");
+  lua_setfield(L, -2, "__mode");
+  lua_setmetatable(L, -2); /* factor mt is a weak table */
+  /* setup factor mt */
+  lua_pushcfunction(L, factor__tostring);
+  lua_setfield(L, -2, "__tostring");
+  lua_pushcfunction(L, factor__len);
+  lua_setfield(L, -2, "__len");
+  lua_pushvalue(L, -1); /* factor mt */
+  lua_pushcclosure(L, factor__call, 1);
+  lua_setfield(L, -2, "__call");
+  lua_pushvalue(L, -1); /* factor mt */
+  lua_newtable(L);
+  nl_register(L, factor_lib, 0);
+  lua_pushcclosure(L, factor__index, 2);
+  lua_setfield(L, -2, "__index");
+  /* setup factor function */
+  lua_pushcclosure(L, stat_factor, 1);
+  lua_setfield(L, -2, "factor");
   return 1;
 }
 

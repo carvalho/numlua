@@ -1,0 +1,7 @@
+Help [=[
+
+matrix.load(filename)
+------------------------
+
+Loads a matrix from HDF5 file `filename` and returns the loaded matrix.
+]=]

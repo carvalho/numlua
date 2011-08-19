@@ -1,0 +1,14 @@
+Help [=[
+
+stat.dnbinom(s, xn, pr)
+stat.pnbinom(s, xn, pr)
+stat.qnbinom(p, xn, pr)
+----------------------
+
+Computes the probability mass function (`dnbinom`), cumulative distribution
+function (`pnbinom`), and inverse cdf (`qnbinom`) for the *negative binomial*
+distribution with size `xn >= 0` and probability of success on each trial
+`0 <= pr <= 1`. The density is given by
+`choose(xn + s - 1, s) * pr^xn * (1 - pr)^s` for `s = 0, ..., xn`, where
+`choose(xn + s - 1, s)` is the binomial coefficient.
+]=]

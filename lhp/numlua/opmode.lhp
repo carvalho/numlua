@@ -1,0 +1,13 @@
+Help [=[
+
+numlua.opmode ([mode])
+----------------------
+
+Returns and optionally sets the operation mode to in-place. If `mode` is
+absent, returns the current operation mode; otherwise, sets the operation
+mode to `mode` and returns the old mode.
+
+Note that metamethods are affected by opmode; for example, if
+`numlua.opmode()` is **true**,`-a` updates `a` in-place and the statement
+`u = u + c * v` updates _both_ `v` and `u`.
+]=]

@@ -1,0 +1,14 @@
+Help [=[
+
+matrix.fft(m [, inverse [, wisdomonly [, inplace]]])
+----------------------------------------------------
+
+Computes the fast Fourier transform of _complex_ matrix `m`.
+If `inverse` is **true**, computes the _normalized_ inverse FFT. `wisdomonly`
+is a FFTW-specific parameter: if **true**, a plan to compute the transform is
+only created if wisdom is available for the given problem, that is, a
+`FFTW_WISDOM_ONLY` flag is passed when building the plan. The default flag is
+`FFTW_ESTIMATE`. If `inplace` is **true**, `m` is updated _in-place_.
+
+__See also__: `matrix.fct`, `fft.plan`
+]=]

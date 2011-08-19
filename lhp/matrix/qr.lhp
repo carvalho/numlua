@@ -1,0 +1,27 @@
+Help [=[
+
+matrix.qr(A [, permute [, inplace]])
+------------------------------------
+
+Computes the QR factorization of matrix `A`, that is, returns an unitary
+matrix `Q` and an upper trapezoidal matrix `R` such that `A = Q * R`.
+
+If `permute` is **true**, computes the QR factorization with column pivoting
+by also returning a permutation vector `p` such that
+`A = (Q * R):pivot(p, true)`, that is, `P = eye(A:size(2)):pivot(p, true)`
+satisfies `A * P^T = Q * R`.
+
+In `inplace` is **true**, `A` is overwritten with `R`.
+
+Example:
+
+        -- solve linear system A * x = b
+        function linsolve (A, b)
+          local q, r = qr(A)
+          local x = zeros(#b):mmul(A, b, 't') -- x = t(A) * b
+          x:trmul(r, 'u', true, 't') -- x = t(inv(r)) * x
+          x:trmul(r, 'u', true) -- x = inv(r) * x
+          return x
+        end
+
+]=]

@@ -1,0 +1,19 @@
+Help [=[
+
+matrix.sum(m [, alpha [, init]])
+--------------------------------
+
+Performs a linear fold on matrix `m` in element-order, that is, computes
+
+        (...((init * alpha + m[1]) * alpha + m[2]) ... ) * alpha + m[n])
+
+where `n = m:size"*"`.
+
+Parameters `alpha` and `init` default to 1 and 0 respectively; in
+particular, `matrix.sum(m)` computes the simple sum of the entries in `m`.
+It is semantically equivalent to
+
+        matrix.fold(m, function(a, e) return a * alpha + e end, init)
+
+__See also__: `matrix.fold`
+]=]

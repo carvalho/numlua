@@ -2,7 +2,7 @@
  *
  * mt.c
  * Mersenne Twister random number generator
- * Luis Carvalho (carvalho @ dam.brown.edu)
+ * Luis Carvalho (lexcarvalho@gmail.com)
  * Adapted from mt19937ar.c: state vector is now kept on a dedicated
  * 		struct instead of global var, as implemented by Luiz Henrique
  * 		de Figueiredo on lrandom (at 
@@ -14,11 +14,10 @@
  * Coded by Takuji Nishimura and Makoto Matsumoto. ]
  * 
  * See Copyright Notice at the bottom of this file
- * $Id: mt.c,v 1.2 2006/02/03 23:35:58 carvalho Exp $
  *
  * ==================================================================} */
 
-#include "numlua.h"
+#include "rng.h"
 
 /* Period parameters */  
 #define N RNG_MAXSTATES

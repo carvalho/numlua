@@ -1,0 +1,8 @@
+Help [=[
+
+rng.runifint([low [, high [, dest]]])
+-------------------------------------
+
+Returns random deviates from the discrete uniform distribution between
+`low` and `high`.
+]=]

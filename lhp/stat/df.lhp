@@ -1,0 +1,12 @@
+Help [=[
+
+stat.df(x, dfn, dfd)
+stat.pf(x, dfn, dfd [, pnonc])
+stat.qf(p, dfn, dfd [, pnonc])
+------------------------------
+
+Computes the density (`df`), cumulative distribution function (`pf`), and
+inverse cdf (`qf`) for the *F* distribution with `dfn >= 0` and `dfd >= 0`
+degrees of freedom in the numerator and denominator, and non-centrality
+parameter `pnonc`.
+]=]

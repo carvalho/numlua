@@ -1,0 +1,9 @@
+Help [=[
+
+mathx.choose(n, k)
+mathx.lchoose(n, k)
+-------------------
+
+Compute binomial coefficients and their logarithms (`choose` and `lchoose`
+respectively`.)
+]=]

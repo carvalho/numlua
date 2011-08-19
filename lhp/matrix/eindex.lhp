@@ -1,0 +1,20 @@
+Help [=[
+
+matrix.eindex(m, eopos)
+-----------------------
+
+Returns the dimensional indexes in `m` that correspond to element-order
+index `eopos`.
+
+Example:
+
+        function list (m)
+          for i, e in m:entries(true) do
+            local t = {m:eindex(i)}
+            t[#t + 1] = e
+            print(unpack(t))
+          end
+        end
+
+__See also__: `matrix.eorder`, `matrix.entries`
+]=]

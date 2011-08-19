@@ -1,0 +1,27 @@
+Help [=[
+
+matrix.set(m, i1 [, i2 [... [, in]]], value)
+matrix.set(m, eoindex, value)
+matrix.set(m, what, value)
+--------------------------
+
+Sets a submatrix of `m` to `value`. There are three ways of specifying the
+submatrix:
+
+  * Using the indexes `i1`, ..., `in`, where `n` is `m:size"#"`, the number
+    of dimensions in `m`: operates on the submatrix `m[i1]...[in]`. Similarly
+    to `matrix.get`, indices can be remapped if out of range and null indices
+    are forbidden.
+  * Providing an _element-order_ vector `eoindex`; in this case,
+    `m[eoindex[i]] = value[i]`, that is, the respective entries in `m`
+    are set for `i=1, ..., #eoindex`.
+  * Specifying `what` to `"_"` to assign the whole matrix, `"l"` or `"L"` to
+    assign only the strict lower triangle of `m`, `"u"` or `"U"` to assign
+    only the strict upper triangle of `m`, and `"d"` or `"D"` to assign the
+    diagonal of `m`.
+
+Parameter `value` can be a number (or complex) or a conformable matrix
+according to the submatrix being indexed.
+
+__See also__: `matrix.get`
+]=]

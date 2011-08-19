@@ -1,0 +1,10 @@
+Help [=[
+
+mathx.digamma(x)
+----------------
+
+Computes the digamma function, the logarithmic derivative of the gamma
+function, at `x`.
+
+__See also__: `mathx.gamma`
+]=]

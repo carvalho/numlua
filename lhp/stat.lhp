@@ -1,0 +1,9 @@
+Help [=[
+
+stat
+====
+
+The `stat` module implements statistical routines: probability mass and
+density functions, cumulative distribution functions (cdf) and inverse cdf
+(quantile) functions for a number of distributions; and _factors_.
+]=]

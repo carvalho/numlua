@@ -1,0 +1,8 @@
+Help [=[
+
+rng.rdirichlet(alpha [, dest])
+------------------------------
+
+Returns random deviates from the Dirichlet distribution with parameter
+`alpha`. `alpha` should be a real vector with positive entries.
+]=]

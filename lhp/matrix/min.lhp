@@ -1,0 +1,11 @@
+Help [=[
+
+matrix.min(m)
+-------------
+
+Returns the _minimum_ element in `m` and the minimizing element-order index
+of `m`. Complex numbers are compared based on their real parts, and their
+imaginary parts are only used to break ties.
+
+__See also__: `matrix.max`, `matrix.sort`
+]=]

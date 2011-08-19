@@ -1,0 +1,8 @@
+Help [=[
+
+numlua.type(obj)
+----------------
+
+If `obj` is an userdata with metatable `mt` and `mt.__type` is not **nil**,
+returns `mt.__type`, otherwise returns the type of `obj` (`type(obj)`).
+]=]

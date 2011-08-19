@@ -1,0 +1,10 @@
+Help [=[
+
+matrix.eorder(m, i1, i2, ..., in)
+---------------------------------
+
+Returns the element-order index in `m` that corresponds to the dimensional
+indexes `i1`, `i2`, ..., `in`, where `n` is the dimensionality of `m`.
+
+__See also__: `matrix.eindex`
+]=]

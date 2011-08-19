@@ -1,0 +1,7 @@
+Help [=[
+
+rng.copy()
+----------
+
+Returns a copy of rng object `rng`.
+]=]

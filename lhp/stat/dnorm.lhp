@@ -1,0 +1,12 @@
+Help [=[
+
+stat.dnorm(x [, mean [, sd]])
+stat.pnorm(x [, mean [, sd]])
+stat.qnorm(p [, mean [, sd]])
+-----------------------------
+
+Computes the density (`dnorm`), cumulative distribution function (`pnorm`), and
+inverse cdf (`qnorm`) for the *normal* distribution with parameters `mean` and
+standard deviation `sd >= 0`. The default values for `mean` and `sd` are zero
+and one, respectively.
+]=]

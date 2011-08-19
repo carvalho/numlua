@@ -2,10 +2,9 @@
  *
  * ranlib.c
  * Ranlib random number generator
- * Luis Carvalho (carvalho @ dam.brown.edu)
+ * Luis Carvalho (lexcarvalho@gmail.com)
  * Adapted from ranlib.c to consider nl_RNG objects
  * Original files can be found at http://www.netlib.org/random
- * $Id: ranlib.c,v 1.2 2006/02/03 23:35:58 carvalho Exp $
  *
  * ==================================================================} */
 

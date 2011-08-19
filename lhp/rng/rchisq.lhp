@@ -1,0 +1,11 @@
+Help [=[
+
+rng.rchisq(df [,xnonc [, dest]])
+--------------------------------
+
+Returns random deviates from the chi-square distribution with degrees of
+freedom `df` (`df > 0`) and optional non-centrality parameter `xnonc`
+(`xnonc >= 0`, defaults to zero).
+
+__See also__: `stat.dchisq`
+]=]

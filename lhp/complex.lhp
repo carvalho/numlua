@@ -1,0 +1,50 @@
+Help [=[
+
+complex
+=======
+
+The `complex` module implements complex numbers according to the C99 standard.
+To create a complex number `a + b * i`, simply issue `complex(a, b)` or
+`a + b * complex.i`, or even simply `a + b * i` when using `numlua.seeall`.
+You can set the real and imaginary parts of complex `z` with `z.r = x` and
+`z.i = x` respectively. Since complex numbers are userdata, regular assignment
+is a reference assignment (`z = c` makes `z` a reference to `c`); to actually
+assign values, use `z._ = c`.
+
+Similarly to the `math` library, all mathematical functions for C99 complex
+numbers are available; please check your man pages for more details about the
+following functions:
+
+         abs      arg     acos    acosh     asin   asinh
+        atan    atanh     conj      cos     cosh     exp
+        imag      log   logabs     proj     real     sin
+        sinh     sqrt      tan     tanh 
+
+In particular, to recover the real and imaginary parts of complex `z`, use
+`z:real()` and `z:imag()` respectively. In addition to these methods, `add`,
+`sub`, `mul`, `div`, and `pow` implement arithmetical methods and metamethods,
+that is, `a + b` is equivalent to `complex.add(a, b)` and so on. The "length"
+of `z`, `#z`, is `complex.abs(z)`.
+
+All methods accept an optional last argument -- whose default value is given
+by `numlua.opmode` -- that codes for _in-place_ applications. For instance,
+
+        > c = complex(2, -1)
+        > print(c:exp(), c)
+        3.9923240484413-6.217676312368i 2-1i
+        > print(c:exp(true), c) -- in-place
+        3.9923240484413-6.217676312368i 3.9923240484413-6.217676312368i
+
+and while `c = complex.exp(z * i) * a + b; print(c)` creates (and discards)
+four temporary complex numbers, 
+
+        op = numlua.opmode(true) -- in-place by default now
+        c = complex(0, 1); c = complex.exp(c * z) * a + b
+        numlua.opmode(op) -- restore previous mode
+
+creates no temporary userdata as all operations are in-place. Note that
+operand order is important even when the operation is commutative: if
+`numlua.opmode()` is **true**, `a + b` is equivalent to
+`complex.add(a, b, true)` where the result is stored at `a`, while `b + a`, or
+`complex.add(b, a, true)`, stores at `b`.
+]=]

@@ -1,0 +1,20 @@
+Help [=[
+
+matrix.balance (A [, what])
+---------------------------
+
+Balances a matrix `A` as a way to reduce its 1-norm and thus improve the
+accuracy of the computed eigenvalues and eigenvectors. The operations involve,
+first, _permuting_ `A` by a similarity transformation to isolate eigenvalues
+in the first 1 to `l` and last `h` to `#A` elements of the diagonal, and then
+_scaling_ by a diagonal similarity transformation to rows and columns `l + 1`
+to `h - 1` to make them as close in norm as possible. Parameter `what`
+controls which operations are performed to balance `A`:
+
+  * `what == "n"` or `what == "N"`: nothing is done (no balancing);
+  * `what == "p"` or `what == "P"`: permute only;
+  * `what == "s"` or `what == "S"`: scale only;
+  * `what == "b"` or `what == "B"`: both permute and scale, the default option
+
+__See also__: `matrix.eig`
+]=]

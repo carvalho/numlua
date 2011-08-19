@@ -1,0 +1,20 @@
+Help [=[
+
+matrix.diag(m [, shift])
+------------------------
+
+If `m` is a vector, returns a square matrix such that the `shift` diagonal of
+the matrix is `m`; otherwise, if `m` is two-dimensional, returns a reference
+to the `shift` diagonal of `m`. If `shift` is zero (the default value), the
+main diagonal is referenced; if `shift > 0`, the `shift` diagonal above the
+main diagonal is referenced, and if `shift < 0`, the `shift` diagonal below
+the main diagonal is referenced.
+
+Example:
+
+        function trace (m)
+          local r, c = m:shape()
+          assert(m:size"#" == 2 and r == c, "square matrix expected")
+          return m:diag():sum()
+        end
+]=]

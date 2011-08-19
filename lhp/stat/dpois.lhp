@@ -1,0 +1,12 @@
+Help [=[
+
+stat.dpois(s, l)
+stat.ppois(s, l)
+stat.qpois(p, l)
+-------------------
+
+Computes the probability mass function (`dpois`), cumulative distribution
+function (`ppois`), and inverse cdf (`qpois`) for the *Poisson* distribution
+with mean `l >= 0`. The density is given by `l^s * exp(-l) / s!` for
+`s = 0, 1, ...`.
+]=]

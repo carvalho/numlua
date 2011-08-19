@@ -1,0 +1,9 @@
+Help [=[
+
+matrix.conj(a [, inplace])
+--------------------------
+
+Sets each element in `a` to its conjugate in-place if `inplace` is
+**true**, or returns the conjugate of `a`. If `a` is not complex, does
+nothing.
+]=]

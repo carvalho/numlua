@@ -1,0 +1,13 @@
+Help [=[
+
+stat.dbinom(s, xn, pr)
+stat.pbinom(s, xn, pr)
+stat.qbinom(p, xn, pr)
+----------------------
+
+Computes the probability mass function (`dbinom`), cumulative distribution
+function (`pbinom`), and inverse cdf (`qbinom`) for the *binomial* distribution
+with size `xn >= 0` and probability of success on each trial `0 <= pr <= 1`.
+The density is given by `choose(xn, s) * pr^s * (1 - pr)^(xn - s)` for
+`s = 0, ..., xn`, where `choose(xn, s)` is the binomial coefficient.
+]=]

@@ -1,0 +1,8 @@
+Help [=[
+
+matrix.concat(m1, ..., mn [, colcat])
+-------------------------------------
+
+Concatenates conformable matrices `m1`, `...`, `mn` _row-wise_. If `colcat` is
+**true**, concatenates _column-wise_.
+]=]

@@ -1,0 +1,52 @@
+Help [=[
+
+matrix.svd(A [, what])
+----------------------
+
+Computes the singular value decomposition of `m`-by-`n` matrix `A`. The SVD is
+specified as `A = U * S * V^H`, where `U` and `V` are unitary matrices whose
+first `min(m, n)` columns represent the left and right singular vectors of
+`A`, respectively, and `S` is a diagonal matrix whose `min(m, n)` diagonal
+entries contain the singular values of `A`. `U`, `V`, and `S` are computed
+according to parameter `what`:
+
+  * `what == "n"` or `what == "N"`, returns only the singular values of `A`;
+  * `what == "l"` or `what == "L"`, the first `min(m, n)` columns of `U` are
+    stored _in-place_ at `A`;
+  * `what == "r"` or `what == "R"`, the first `min(m, n)` rows of `V^H` are
+    stored _in-place_ at `A`;
+  * `what == "a"` or `what == "A"`, the default value, returns `U`, `S`, and
+    `V^H`.
+
+The singular values are returned in descending order. Note that `V^H` is
+returned, not `V`.
+
+If an internal error occurs, returns **nil** and a diagnostic message; if the
+algorithm fails to converge, returns **false** and a warning message.
+
+Examples:
+
+        function cond (m)
+          local s = assert(svd(m, "n")) -- just singular values
+          return s[1] / s[#m] -- condition number
+        end
+
+        local lt = function (x) return function(e) return e < x end end
+        function matrix.rank (m, tol) -- effective rank according to tol
+          local s = assert(svd(m, "n")) -- just singular values
+          local tol = tol or 0
+          if tol <= 0 then -- set default tolerance?
+            tol = max(m:shape()) * eps * s[1]
+          end
+          local r = s:find(lt(tol))
+          if r == nil then -- all > tol?
+            return #s -- full rank: min(m:shape())
+          end
+          return r - 1 -- last position > tol
+        end
+
+For other examples, see `matrix.null`, `matrix.orth`, and `matrix.pinv` in
+`matrix.lua`.
+
+__See also__: `matrix.rcond`
+]=]

@@ -1,0 +1,2301 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1 //EN"
+		"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+
+<head>
+	<title>Numeric Lua documentation</title>
+	<meta name="description" content="Numeric Lua" />
+	<meta name="keywords" content="numlua,lua" />
+	<meta name="author" content="Luis Carvalho" />
+	<meta http-equiv="content-language" content="en" />
+	<meta http-equiv="content-type" content="application/xhtml+xml; charset=utf-8" />
+	<meta http-equiv="content-style-type" content="text/css" />
+  <link rel="stylesheet" type="text/css"
+    href="style.css" media="screen" />
+</head>
+
+<body>
+<div id="page">
+	
+<div id="header">
+	<h1>Numeric Lua</h1>
+  Numerical routines for the Lua programming language
+</div>
+
+<div id="horizbar">
+	<a href="#introduction" accesskey="1">Introduction</a>&nbsp; :: &nbsp;
+  <a href="#complex"><code>complex</code></a>&nbsp; :: &nbsp; 
+  <a href="#matrix"><code>matrix</code></a>&nbsp; :: &nbsp; 
+  <a href="#fft"><code>fft</code></a>&nbsp; :: &nbsp; 
+  <a href="#stat"><code>stat</code></a>&nbsp; :: &nbsp; 
+  <a href="#rng"><code>rng</code></a>&nbsp; :: &nbsp; 
+  <a href="#mathx"><code>mathx</code></a>
+</div>
+
+<div class="content">
+
+
+<h2 id="introduction">Introduction</h2>
+<small>What Numeric Lua is</small>
+
+<p><em>Numeric Lua</em> is a numerical package for the Lua programming
+language. It includes support for complex numbers, multidimensional matrices,
+random number generation, fast Fourier transforms, and special functions. Most
+of the routines are simple wrappers for well known numerical libraries:
+complex numbers and part of the extended math modules come from C99; other
+special functions, including statistical functions, are adapted from Netlib's
+SLATEC and DCDFLIB; random number generation is based on Takuji Nishimura and
+Makoto Matsumoto's Mersenne Twister generator as the "engine" (uniform
+deviates) and Netlib's RANLIB for the remaining deviates; fast Fourier
+transforms are implemented from FFTW; and the matrix package draws most of its
+numeric intensive routines from Netlib's ubiquitous BLAS and LAPACK
+packages.</p>
+
+<p>Numeric Lua tries to maintain Lua's minimalist approach by providing
+bare-bone wrappers to the numerical routines. The user can use the outputs for
+further computations and is then fully responsible for the results. Other Lua
+features are also available, such as OO simulation through metamethods and
+functional facilities. A basic API is provided in order to promote
+extensibility. Also, check <code>numlua.seeall</code> for a quick way to start
+using Numeric Lua.</p>
+
+<p>Numeric Lua is licensed under the same license as Lua -- the MIT license --
+and so can be freely used for academic and commercial purposes.</p>
+
+
+<h3>numlua.buffer(opt [, arg])</h3>
+
+<p>Operates on Numlua buffer according to <code>opt</code>:</p>
+
+<ul>
+<li><code>"release"</code>: release all buffers with size at least
+<code>arg</code>; <code>arg</code> defaults to 0.</li>
+<li><code>"status"</code>: returns the total size and number of buffers that
+are <em>busy</em> if <code>arg</code> is <strong>true</strong> or
+<em>free</em> otherwise.</li>
+</ul>
+
+
+<h3>numlua.type(obj)</h3>
+
+<p>If <code>obj</code> is an userdata with metatable <code>mt</code> and
+<code>mt.__type</code> is not <strong>nil</strong>, returns
+<code>mt.__type</code>, otherwise returns the type of <code>obj</code>
+(<code>type(obj)</code>).</p>
+
+
+<h3>numlua.opmode ([mode])</h3>
+
+<p>Returns and optionally sets the operation mode to in-place. If
+<code>mode</code> is absent, returns the current operation mode; otherwise,
+sets the operation mode to <code>mode</code> and returns the old mode.</p>
+
+<p>Note that metamethods are affected by opmode; for example, if
+<code>numlua.opmode()</code> is <strong>true</strong>,<code>-a</code> updates
+<code>a</code> in-place and the statement <code>u = u + c * v</code> updates
+<em>both</em> <code>v</code> and <code>u</code>.</p>
+
+
+<h3>numlua.seeall</h3>
+
+<p>A <code>require</code> call to <code>numlua.seeall</code> loads most of the
+functions in Numlua to the global table to make it easier to prototype and
+test code or even just use Numlua is a flexible computational shell. In
+particular, <code>numlua.seeall</code> does the following:</p>
+
+<ul>
+<li>Loads the <code>help</code> module, if installed.</li>
+<li>Sets <em>all</em> methods in Numlua to the global table; a prefix is
+appended to a method if it exists in more than one class table or in the
+global table to avoid conflicts. The order in which the methods are
+"registered" and their prefixes are: <code>"x"</code> for <code>math</code>
+(regular lua module) and <code>mathx</code>, <code>"c"</code> for
+<code>complex</code>, <code>"m"</code> for <code>matrix</code>,
+<code>"s"</code> for <code>stat</code>, and <code>"r"</code> for
+<code>rng</code>.</li>
+<li>Mathematical functions that are defined on numbers, complex numbers, and
+matrices -- <code>abs</code>, <code>exp</code>, and so on -- are shadowed by
+functions that call a particular method based on its argument. For example,
+<code>exp(x)</code> calls <code>math.exp(x)</code> if <code>x</code> is a
+number, <code>complex.exp(x)</code> (or <code>cexp(x)</code>) if
+<code>x</code> is complex, and <code>matrix.exp(x)</code> (or
+<code>mexp(x)</code>) if <code>x</code> is a matrix.</li>
+<li><code>type</code> is overridden with <code>numlua.type</code> and
+<code>opmode</code> is <code>numlua.opmode</code>.</li>
+</ul>
+
+
+<h2 id="complex">complex</h2>
+<small>Complex numbers</small>
+
+<p>The <code>complex</code> module implements complex numbers according to the
+C99 standard. To create a complex number <code>a + b * i</code>, simply issue
+<code>complex(a, b)</code> or <code>a + b * complex.i</code>, or even simply
+<code>a + b * i</code> when using <code>numlua.seeall</code>. You can set the
+real and imaginary parts of complex <code>z</code> with <code>z.r = x</code>
+and <code>z.i = x</code> respectively. Since complex numbers are userdata,
+regular assignment is a reference assignment (<code>z = c</code> makes
+<code>z</code> a reference to <code>c</code>); to actually assign values, use
+<code>z._ = c</code>.</p>
+
+<p>Similarly to the <code>math</code> library, all mathematical functions for
+C99 complex numbers are available; please check your man pages for more
+details about the following functions:</p>
+
+<pre><code>     abs      arg     acos    acosh     asin   asinh
+    atan    atanh     conj      cos     cosh     exp
+    imag      log   logabs     proj     real     sin
+    sinh     sqrt      tan     tanh
+</code></pre>
+
+<p>In particular, to recover the real and imaginary parts of complex
+<code>z</code>, use <code>z:real()</code> and <code>z:imag()</code>
+respectively. In addition to these methods, <code>add</code>,
+<code>sub</code>, <code>mul</code>, <code>div</code>, and <code>pow</code>
+implement arithmetical methods and metamethods, that is, <code>a + b</code> is
+equivalent to <code>complex.add(a, b)</code> and so on. The "length" of
+<code>z</code>, <code>#z</code>, is <code>complex.abs(z)</code>.</p>
+
+<p>All methods accept an optional last argument -- whose default value is
+given by <code>numlua.opmode</code> -- that codes for <em>in-place</em>
+applications. For instance,</p>
+
+<pre><code>    &gt; c = complex(2, -1)
+    &gt; print(c:exp(), c)
+    3.9923240484413-6.217676312368i 2-1i
+    &gt; print(c:exp(true), c) -- in-place
+    3.9923240484413-6.217676312368i 3.9923240484413-6.217676312368i
+</code></pre>
+
+<p>and while <code>c = complex.exp(z * i) * a + b; print(c)</code> creates
+(and discards) four temporary complex numbers, </p>
+
+<pre><code>    op = numlua.opmode(true) -- in-place by default now
+    c = complex(0, 1); c = complex.exp(c * z) * a + b
+    numlua.opmode(op) -- restore previous mode
+</code></pre>
+
+<p>creates no temporary userdata as all operations are in-place. Note that
+operand order is important even when the operation is commutative: if
+<code>numlua.opmode()</code> is <strong>true</strong>, <code>a + b</code> is
+equivalent to <code>complex.add(a, b, true)</code> where the result is stored
+at <code>a</code>, while <code>b + a</code>, or
+<code>complex.add(b, a, true)</code>, stores at <code>b</code>.</p>
+
+
+<h2 id="matrix">matrix</h2>
+<small>Multidimensional matrices</small>
+
+<p>The <code>matrix</code> module implements multidimensional matrices. New
+<code>matrix</code> objects are created by specifying dimensions with
+<code>matrix.new</code> (uninitialized), <code>matrix.zeros</code> or
+<code>matrix.ones</code> (filled with zeros or ones), or by directly
+specifying entries in a table and using <code>matrix</code> (or
+<code>matrix.fromtable</code>.) Matrices can be real or complex, which can be
+set in the last argument of these functions. To retrieve the dimensions of a
+matrix use <code>matrix.shape</code> or <code>matrix.size</code>; in
+particular, <code>m:size"#"</code> returns the number of dimensions of a
+matrix <code>m</code>.</p>
+
+<p>To access and set entries in a matrix <code>m</code> with <code>n</code>
+dimensions you can simply use <code>m[i1]...[in]</code>; for example, to set
+the entry at row <code>i</code> and column <code>j</code> of a two-dimensional
+matrix you can use <code>m[i][j] = x</code>. Alternatively, you can use
+<code>matrix.get</code> and <code>matrix.set</code>. These two functions can
+also be used to produce a <em>reference</em> to a submatrix and to assign
+whole submatrices; as an example, <code>m:set(a)</code> assigns <code>a</code>
+to <code>m</code>, either element-wise if <code>a</code> is a conformable
+matrix or by filling <code>m</code> with <code>a</code> if <code>a</code> is a
+number or complex. You can also use <code>matrix.copy</code> to copy a matrix.
+More general matrix references can be created with <code>matrix.section</code>
+or <code>matrix.slice</code>.</p>
+
+<p>Entries in a matrix can be set more systematically using functional
+facilities: <code>matrix.apply</code> sets entries based on a function that
+takes indices as arguments while <code>matrix.map</code> takes a function on
+entries. Both functions operate <em>in-place</em> and in
+<em>element-order</em>, that is, in column-major order (first indices vary
+faster.) Element-order is also respected when iterating on a matrix with
+<code>matrix.entries</code>.</p>
+
+<p>Logical methods -- <code>matrix.find</code>, <code>matrix.ifelse</code>,
+and <code>matrix.which</code> -- are helpful for filtering matrix entries.
+These functions always take a <em>condition</em> argument, which can be: a
+boolean function on each entry; or, if a number <code>x</code>, the boolean
+function <code>function (e) return e == x end</code>; or, if a conformable
+matrix <code>x</code>, <code>function (e) return e == ex end</code> where
+<code>ex</code> is the entry in <code>x</code> at the same element-order index
+of <code>e</code>, and so, a boolean function for element-wise comparison. The
+condition argument defaults to
+<code>function (e) return e ~= 0 end</code>.</p>
+
+<p>Common mathematical operations can be carried using <code>matrix.map</code>
+but for convenience <code>matrix</code> provides the following functions:</p>
+
+<pre><code>      abs    acos    acosh    asin    asinh    atan
+    atanh     cos     cosh     exp      log     sin
+     sinh    sqrt      tan    tanh
+</code></pre>
+
+<p>All these functions take an optional second argument -- whose default value
+is given by <code>numlua.opmode</code> -- that specifies if the operation
+should be in-place. Thus, calling <code>m:f()</code> where <code>f</code> is
+any of the functions above, is semantically equivalent to
+<code>matrix.map(inplace and m or m:copy(), f)</code>.</p>
+
+<p>Arithmetical methods <code>matrix.add</code>, <code>matrix.mul</code>,
+<code>matrix.div</code>, and <code>matrix.pow</code> operate element-wise and
+accept an optional last argument that signals in-place application to the
+first argument. Matrix multiplication is implemented in three specialized
+methods: <code>matrix.mmul</code> for general matrix multiplication,
+<code>matrix.hemul</code> for Hermitian matrix multiplication, and
+<code>matrix.trmul</code> for triangular matrix multiplication. Arithmetical
+metamethods are, not surprisingly, based on these methods and should work as
+expected: <code>__add</code> and <code>__sub</code> are based on
+<code>matrix.add</code>, <code>__mul</code> is based on
+<code>matrix.mul</code> (for scalars) and <code>matrix.mmul</code>,
+<code>__mod</code> is <code>matrix.ls</code> (left division), and
+<code>__div</code> is based on <code>matrix.div</code> or
+<code>matrix.ls</code> for right division (<code>a / b</code> is equivalent to
+<code>t(t(b) % t(a))</code> when <code>a</code> and <code>b</code> are
+conformable matrices, where <code>t</code> is <code>matrix.t</code>, the
+transpose operator.)</p>
+
+<p>Note however, that even though metamethods make the code cleaner and more
+intuitive, it is often computationally more efficient to use the basic methods
+to avoid creation of temporary matrices. Here is a quick example:</p>
+
+<pre><code>    -- updates invA to inv(A + u * v') according to the
+    -- Sherman-Morrison formula: inv(A + u * v') = inv(A)
+    --          - (inv(A) * u * v' * inv(A)) / (1 + v' * inv(A) * u)
+    function shermanmorrison (invA, u, v)
+      local x = v * invA -- v' * inv(A)
+      return invA:copy():mmul(invA * u, x, "n", "n", -1 / (1 + dot(x, u)))
+    end
+</code></pre>
+
+<p>The next function is equivalent,</p>
+
+<pre><code>    function naiveshermanmorrison (invA, u, v)
+      local x = v * invA -- v' * inv(A)
+      return invA - invA * u * x / (1 + dot(x, u))
+    end
+</code></pre>
+
+<p>but creates two extra temporary matrices: one from
+<code>t = (invA * u) * x</code> and other from
+<code>t / (1 + dot(x,u))</code>.</p>
+
+<p>While favoring in-place operations can help avoid temporary object
+creation, the adoption of <code>numlua.opmode</code> can make notation lighter
+and less functional. It should be used with care, however, since operations
+being applied to the first argument of the methods break operation
+commutativity; for instance, while both <code>matrix.add(a, b)</code> and
+<code>matrix.add(b, a)</code> return a new matrix <code>c = a + b</code>,
+<code>matrix.add(a, b, true)</code> stores -- or better, applies -- the result
+in <code>a</code> and <code>matrix.add(b, a, true)</code> stores the result in
+<code>b</code>. Another example:</p>
+
+<pre><code>    function sweep (a, k)
+      local ck = a:col(k)
+      local b = ck:copy()
+      local ak, d = a[k], b[k]
+      ak:div(d, false, true) -- a[k] = a[k] / b[k], in-place
+      for i = 1, #a do
+        if i ~= k then
+          a[i]:add(ak, -b[i], true) -- a[i] = a[i] - b[i] * a[k], in-place
+        end
+      end
+      ck._ = b:div(-d, false, true) -- ck = b, b = -b / d in-place
+      ck[k] = 1 / d
+      return a
+    end
+</code></pre>
+
+<p>and now using in-place operations by default and metamethods:</p>
+
+<pre><code>    numlua.opmode(true) -- in-place
+    function sweep (a, k)
+      local ck = a:col(k)
+      local b = ck:copy()
+      local ak, d = a[k], b[k]
+      ak = ak / d
+      for i = 1, #a do
+        if i ~= k then
+          a[i]:add(ak, -b[i]) -- a[i] = a[i] - ak * b[i]
+        end
+      end
+      ck._ = b / (-d) -- equivalent to ck:set(b / (-d))
+      ck[k] = 1 / d
+      return a
+    end
+</code></pre>
+
+<p>Finally, matrices can be serialized (in HDF5 format) using
+<code>matrix.save</code> and retrieved using <code>matrix.load</code>.</p>
+
+
+<h3>matrix.get(m, i1 [, i2 [... [, in]]])<br />
+matrix.get(m, eoindex)</h3>
+
+<p>Returns a submatrix of <code>m</code>. There are two ways of specifying the
+submatrix:</p>
+
+<ul>
+<li>Using the indexes <code>i1</code>, ..., <code>in</code>, where
+<code>n</code> is <code>m:size"#"</code>, the number of dimensions in
+<code>m</code>: returns the submatrix <code>m[i1]...[in]</code>. In
+particular, <code>get(m, i1, ..., in)</code> returns the entry <code>m(i1,
+  ..., in)</code>, and <code>m[i]</code> returns the <code>i</code>-th "row"
+of <code>m</code>. Indices that are greater than their dimension or negative
+are circularly remapped to the correct range: if <code>i</code> is the index
+for dimension <code>d</code>, <code>i</code> is mapped to <code>(i - 1) % d +
+  1</code> if <code>i &gt; 0</code> and <code>(i + 1) % n + n</code> if
+<code>i &lt; 0</code>. Null indices are not allowed.</li>
+
+<li>Providing an <em>element-order</em> vector <code>eoindex</code>; in this
+case, returns the respective entries in <code>m</code>, that is, returns
+<code>v</code> such that <code>v[i] = m[eoindex[i]]</code> for
+<code>i=1, ..., #eoindex</code>.</li>
+</ul>
+
+<p><strong>See also</strong>: <code>matrix.set</code></p>
+
+
+<h3>matrix.set(m, i1 [, i2 [... [, in]]], value)<br />
+matrix.set(m, eoindex, value)<br />
+matrix.set(m, what, value)</h3>
+
+<p>Sets a submatrix of <code>m</code> to <code>value</code>. There are three
+ways of specifying the submatrix:</p>
+
+<ul>
+<li>Using the indexes <code>i1</code>, ..., <code>in</code>, where
+<code>n</code> is <code>m:size"#"</code>, the number of dimensions in
+<code>m</code>: operates on the submatrix <code>m[i1]...[in]</code>. Similarly
+to <code>matrix.get</code>, indices can be remapped if out of range and null
+indices are forbidden.</li>
+
+<li>Providing an <em>element-order</em> vector <code>eoindex</code>; in this
+case, <code>m[eoindex[i]] = value[i]</code>, that is, the respective entries
+in <code>m</code> are set for <code>i=1, ..., #eoindex</code>.</li>
+
+<li>Specifying <code>what</code> to <code>"_"</code> to assign the whole
+matrix, <code>"l"</code> or <code>"L"</code> to assign only the strict lower
+triangle of <code>m</code>, <code>"u"</code> or <code>"U"</code> to assign
+only the strict upper triangle of <code>m</code>, and <code>"d"</code> or
+<code>"D"</code> to assign the diagonal of <code>m</code>.</li>
+</ul>
+
+<p>Parameter <code>value</code> can be a number (or complex) or a conformable
+matrix according to the submatrix being indexed.</p>
+
+<p><strong>See also</strong>: <code>matrix.get</code></p>
+
+
+<h3>matrix.slice(m [, first] [, last] [, step])</h3>
+
+<p>Returns a <em>section</em> of matrix <code>m</code> that is a slice in the
+first dimension of <code>m</code> starting at <code>first</code> (defaults to
+1), ending at <code>last</code> (defaults to <code>#m</code>), and alternating
+by <code>step</code> (defaults to 1) positions. The returned section is a
+<em>reference</em> to <code>m</code>.</p>
+
+<p>A shortcut for <code>matrix.slice(m, first, last, step)</code> is
+<code>m(first, last, step)</code>.</p>
+
+<p><strong>See also</strong>: <code>matrix.section</code></p>
+
+
+<h3>matrix.section(m, section)</h3>
+
+<p>Returns a <em>section</em> of matrix <code>m</code> according to table
+<code>section</code>. <code>section</code> is taken as a table with integer
+indices from 1 to <code>n</code>, the number of dimensions of <code>m</code>;
+the <code>i</code>-th value of <code>section</code> should contain another
+table specifying a <em>slice</em> in the form <code>{first, last,
+  step}</code>, where <code>first</code> and <code>step</code> default to 1
+and <code>last</code> defaults to <code>m:size(i)</code>. The returned section
+is a <em>reference</em> to <code>m</code>.</p>
+
+<p>A shortcut for <code>matrix.section(m, section)</code> is
+<code>m(section)</code>.</p>
+
+<p>Example:</p>
+
+<pre><code>    -- assume a and b are real two-dimensional matrices
+    -- check `matrix.kronecker` for a more efficient version
+    function kronecker (a, b)
+      local ra, ca = a:shape()
+      local rb, cb = b:shape()
+      local x = matrix.new(ra * rb, ca * cb)
+      for i = 1, ra do
+        for j = 1, ca do
+          x{{(i-1)*rb+1, i*rb}, {(j-1)*cb+1, j*cb}}._ = b * a[i][j]
+        end
+      end
+      return x
+    end
+</code></pre>
+
+<p><strong>See also</strong>: <code>matrix.slice</code></p>
+
+
+<h3>matrix.add(a, b [, s [, inplace]])</h3>
+
+<p>Adds <code>s * b</code> to <code>a</code>, where <code>s</code> defaults to
+1. If <code>b</code> is a number <code>s</code> is ignored and sets
+<code>a[i] = a[i] + real(b)</code> if <code>a</code> is real, or
+<code>a[i] = a[i] + b</code> if <code>a</code> is complex; otherwise, sets
+<code>a[i] = a[i] + b[i] * s</code> if <code>b</code> is a conformable matrix.
+In particular, <code>matrix.add(a, b, -1)</code> subtracts <code>b</code> from
+<code>a</code>.</p>
+
+<p>If <code>inplace</code> is <strong>true</strong>, <code>a</code> is updated
+<em>in-place</em>.</p>
+
+
+<h3>matrix.mul(a, b [, inplace])</h3>
+
+<p>Performs <em>element-wise</em> multiplication of <code>a</code> and
+<code>b</code>. If <code>b</code> is a number, sets
+<code>a[i] = a[i] * real(b)</code> if <code>a</code> is real, or
+<code>a[i] = a[i] * b</code> if <code>a</code> is complex; otherwise, sets
+<code>a[i] = a[i] * b[i]</code> if <code>b</code> is a conformable matrix.</p>
+
+<p>If <code>inplace</code> is <strong>true</strong>, <code>a</code> is updated
+<em>in-place</em>.</p>
+
+
+<h3>matrix.div(a, b [, right [, inplace]])</h3>
+
+<p>Performs <em>element-wise</em> division of <code>a</code> and
+<code>b</code>. If <code>b</code> is a number, sets
+<code>a[i] = a[i] / real(b)</code> if <code>a</code> is real, or
+<code>a[i] = a[i] / b</code> if <code>a</code> is complex; otherwise, sets
+<code>a[i] = a[i] / b[i]</code> if <code>b</code> is a conformable matrix.</p>
+
+<p>If <code>right</code> is <strong>true</strong>, <code>a</code> is divided
+in the right, that is, <code>a = b / a</code>. If <code>inplace</code> is
+<strong>true</strong>, <code>a</code> is updated <em>in-place</em>.</p>
+
+
+<h3>matrix.pow(a, b [, inplace])</h3>
+
+<p>Performs <em>element-wise</em> power of <code>a</code> and <code>b</code>.
+If <code>b</code> is a number, sets <code>a[i] = a[i] ^ real(b)</code> if
+<code>a</code> is real, or <code>a[i] = a[i] ^ b</code> if <code>a</code> is
+complex; otherwise, sets <code>a[i] = a[i] ^ b[i]</code> if <code>b</code> is
+a conformable matrix.</p>
+
+<p>If <code>inplace</code> is <strong>true</strong>, <code>a</code> is updated
+<em>in-place</em>.</p>
+
+
+<h3>matrix.new(d1, d2, ... [, iscomplex])<br />
+  matrix.zeros(d1, d2, ... [, iscomplex])<br />
+  matrix.ones(d1, d2, ... [, iscomplex])</h3>
+
+<p>Returns a matrix with dimensions <code>d1</code>, <code>d2</code>, and so
+on. If last argument <code>iscomplex</code> is <strong>true</strong>, the
+returned matrix is <em>complex</em>. The entries are <em>arbitrary</em> (not
+initialized) when using <code>new</code>, initialized to zero when using
+<code>zeros</code>, and initialized to one when using <code>ones</code>.</p>
+
+
+<h3>matrix.eorder(m, i1, i2, ..., in)</h3>
+
+<p>Returns the element-order index in <code>m</code> that corresponds to the
+dimensional indexes <code>i1</code>, <code>i2</code>, ..., <code>in</code>,
+where <code>n</code> is the dimensionality of <code>m</code>.</p>
+
+<p><strong>See also</strong>: <code>matrix.eindex</code></p>
+
+
+<h3>matrix.eindex(m, eopos)</h3>
+
+<p>Returns the dimensional indexes in <code>m</code> that correspond to
+element-order index <code>eopos</code>.</p>
+
+<p>Example:</p>
+
+<pre><code>    function list (m)
+      for i, e in m:entries(true) do
+        local t = {m:eindex(i)}
+        t[#t + 1] = e
+        print(unpack(t))
+      end
+    end
+</code></pre>
+
+<p><strong>See also</strong>: <code>matrix.eorder</code>,
+<code>matrix.entries</code></p>
+
+
+<h3>matrix.entries(m [, eorder])</h3>
+
+<p>Returns an iterator over the entries of <code>m</code> so that the
+following construction iterates over the entries of <code>m</code>:</p>
+
+<pre><code>    for i1, i2, ..., in, e in m:entries() do
+      -- body
+    end
+</code></pre>
+
+<p>Here <code>n = m:size"#"</code> is the number of dimensions of
+<code>m</code> and <code>e = m[i1][i2]...[in]</code> takes the value of each
+entry in <code>m</code>.</p>
+
+<p>This construction is semantically equivalent to</p>
+
+<pre><code>    for i = 1, m:size"*" do
+      local i1, i2, ..., in = m:eindex(i)
+      local e = m:get(i1, i2, ..., in)
+      -- body
+    end
+</code></pre>
+
+<p><strong>See also</strong>: <code>matrix.eindex</code></p>
+
+
+<h3>matrix.size(m [, index])</h3>
+
+<p>Returns the size of <code>m</code>, depending on parameter
+<code>index</code>:</p>
+
+<ul>
+<li>if <code>index</code> is a number, returns the size of the
+<code>index</code>-th dimension of <code>m</code></li>
+
+<li>if <code>index == "#"</code>, returns the number of dimensions of
+<code>m</code></li>
+
+<li>if <code>index == "*"</code>, returns the total number of elements of
+<code>m</code></li>
+</ul>
+
+<p>The default value for <code>index</code> is 1.</p>
+
+<p><strong>See also</strong>: <code>matrix.shape</code></p>
+
+
+<h3>matrix.shape(m [, index [, complex]])</h3>
+
+<p>Returns the dimensions of <code>m</code> starting at dimension
+<code>index</code> (defaults to 1) and if <code>m</code> is complex when
+<code>complex</code> is <strong>true</strong>.</p>
+
+<p><strong>See also</strong>: <code>matrix.size</code></p>
+
+
+<h3>matrix.iscomplex(m)</h3>
+
+<p>Returns <strong>true</strong> if <code>m</code> is complex and
+<strong>false</strong> otherwise.</p>
+
+
+<h3>matrix.real(a)</h3>
+
+<p>Returns a <em>real</em> matrix that references the <em>real</em> part of
+<code>a</code> if <code>a</code> is complex or returns <code>a</code> itself
+if <code>a</code> is real.</p>
+
+<p><strong>See also</strong>: <code>matrix.imag</code>,
+<code>matrix.complex</code></p>
+
+
+<h3>matrix.imag(a)</h3>
+
+<p>Returns a <em>real</em> matrix that references the <em>imaginary</em> part
+of <code>a</code> if <code>a</code> is complex or returns
+<code>matrix.zeros(a:shape())</code> if <code>a</code> is real.</p>
+
+<p><strong>See also</strong>: <code>matrix.real</code>,
+<code>matrix.complex</code></p>
+
+
+<h3>matrix.complex(a [, b])</h3>
+
+<p>Returns a <em>complex</em> matrix <code>m</code> such that
+<code>real(m) = real(a)</code> and <code>imag(m) = imag(b)</code>. The default
+value for <code>b</code> is <code>a</code>, so, in particular,
+<code>complex(a)</code> returns a copy of <code>a</code> if <code>a</code> is
+complex. An error is raised if <code>a</code> and <code>b</code> are not
+conformable.</p>
+
+<p><strong>See also</strong>: <code>matrix.real</code>,
+<code>matrix.imag</code></p>
+
+
+<h3>matrix.conj(a [, inplace])</h3>
+
+<p>Sets each element in <code>a</code> to its conjugate in-place if
+<code>inplace</code> is <strong>true</strong>, or returns the conjugate of
+<code>a</code>. If <code>a</code> is not complex, does nothing.</p>
+
+
+<h3>matrix.copy(m [, x])</h3>
+
+<p>Returns a copy of <code>m</code> and optionally sets its content to
+<code>x</code>, a number. <code>matrix.copy</code> is semantically equivalent
+to</p>
+
+<pre><code>    function matrix.copy (m, x)
+      local c = matrix.new(matrix.shape(m, 1, true)) -- frame
+      return set(c, x or m)
+    end
+</code></pre>
+
+<p><strong>See also</strong>: <code>matrix.set</code></p>
+
+
+<h3>matrix.reshape(m, d1, d2, ..., dn)</h3>
+
+<p>Returns a <em>reference</em> to <code>m</code> that has dimensions
+<code>d1</code>, <code>d2</code>, <code>...</code>, <code>dn</code>. The new
+dimensions need to be consistent, that is,
+<code>d1 * d2 * ... * dn == m:size"*"</code>.</p>
+
+<p><strong>See also</strong>: <code>matrix.size</code></p>
+
+
+<h3>matrix.spread(m [, dim [, count]])</h3>
+
+<p>Returns a replicated version of <code>m</code> along dimension
+<code>d</code> (defaults to 1) <code>count</code> number of times (defaults to
+1).</p>
+
+
+<h3>matrix.find(m [, cond [, reverse]])</h3>
+
+<p>Returns the first element-order index in <code>m</code> whose respective
+entry satisfies <code>cond</code>. If <code>reverse</code> is
+<strong>true</strong>, returns the first occurrence in <code>m</code> that
+does <em>not</em> satisfy <code>cond</code>. If no entry in <code>m</code>
+satisfies <code>cond</code>, <strong>nil</strong> is returned. Note that
+matrix <code>m</code> is traversed only up to the first successful entry.</p>
+
+<p>Examples:</p>
+
+<pre><code>    function any (m, cond)
+      return matrix.find(m, cond) ~= nil
+    end
+
+    function all (m, cond)
+      return matrix.find(m, cond, true) == nil
+    end
+</code></pre>
+
+
+<h3>matrix.ifelse(m, cond, x [, y])</h3>
+
+<p>Sets the entries in <code>m</code> that satisfy <code>cond</code> to
+<code>x</code> and, if <code>y</code> is specified, the entries in
+<code>m</code> that do not satisfy <code>cond</code> to <code>y</code>.
+Parameters <code>x</code> and <code>y</code> can be numbers or conformable
+matrices to <code>m</code>.</p>
+
+<p>Examples:</p>
+
+<pre><code>    -- note that matrix.which(m, cond, "#") is preferred
+    function count (m, cond)
+      return matrix.sum(matrix.ifelse(m:copy(), cond, 1, 0))
+    end
+
+    -- mask has ones for true and zeros for false
+    function merge (x, y, mask)
+      return matrix.ifelse(mask:copy(), 1, x, y)
+    end
+
+    local lt = function (x, y) return x &lt; y and 1 or 0 end
+    function min (x, y)
+      return ifelse(matrix.map(x:copy(), y, lt), 1, x, y)
+    end
+    function max (x, y)
+      return ifelse(matrix.map(x:copy(), y, lt), 0, x, y)
+    end
+</code></pre>
+
+<p><strong>See also</strong>: <code>matrix.which</code></p>
+
+
+<h3>matrix.which(m [, cond [, what]])</h3>
+
+<p>Returns entries in <code>m</code> that satisfy <code>cond</code> depending
+on <code>what</code>:</p>
+
+<ul>
+<li><code>what = "k"</code>: returns a vector of element-order indices in
+<code>m</code> whose respective entries satisfy <code>cond</code> or
+<strong>nil</strong> otherwise;</li>
+
+<li><code>what = "v"</code>: returns a vector containing the entries in
+<code>m</code> that satisfy <code>cond</code> or <strong>nil</strong>
+otherwise;</li>
+
+<li><code>what = "#"</code>: returns only the number of entries that safisty
+<code>cond</code>.</li>
+</ul>
+
+<p>Parameter <code>what</code> defaults to <code>"k"</code>.</p>
+
+<p>Examples:</p>
+
+<pre><code>    -- simple alias
+    function count (m, cond)
+      return matrix.which(m, cond, "#")
+    end
+
+    -- mask has ones for true and zeros for false
+    function pack (m, mask)
+      return matrix.which(m, mask, "v")
+    end
+    function unpack (v, mask, m)
+      return matrix.set(m, matrix.which(m, mask), v)
+    end
+</code></pre>
+
+<p><strong>See also</strong>: <code>matrix.ifelse</code></p>
+
+
+<h3>matrix.apply(m, f [, eorder])</h3>
+
+<p>Applies a function <code>f</code> to each entry in <code>m</code>
+<em>in-place</em>, that is, sets <code>m[i1,...,in] = f(i1, ..., in, m[i1,
+  ..., in])</code> where <code>i1, ..., in</code> are indices in
+<code>m</code> (<code>m</code> has dimension <code>n</code>). If
+<code>eorder</code> is <strong>true</strong>, <code>f</code> takes indices in
+element-order. If <code>f</code> does not return a numeric value,
+<code>m</code> is not changed for the called index.</p>
+
+<p>Examples:</p>
+
+<pre><code>    local h = function (i, j) return 1 / (i + j - 1) end
+    function hilbert (n)
+      return matrix.new(n, n):apply(h)
+    end
+
+    local circ = function (v, n)
+      return function (i, j) return v[(j - i) % n + 1] end
+    end
+    function circulant (v)
+      local n = #v
+      return matrix.new(n, n):apply(circ(v, n))
+    end
+</code></pre>
+
+
+<h3>matrix.fold(m, f [, init])</h3>
+
+<p>Computes the <em>left</em> fold of function <code>f</code> over the entries
+in <code>m</code> in element-order, that is, returns</p>
+
+<pre><code>    f(...f(f(init, m[1]), m[2])..., m[n])
+</code></pre>
+
+<p><strong>See also</strong>: <code>matrix.sum</code></p>
+
+
+<h3>matrix.map(m1, m2, ..., mn, f)</h3>
+
+<p>Sets, in element-order, the i-th entry in <code>m1</code> <em>in-place</em>
+to</p>
+
+<pre><code>    m1[i] = f(m1[i], m2[i], ..., mn[i])
+</code></pre>
+
+<p>if the returned value is a number or complex, where <code>m2</code>, ...,
+<code>mn</code> are all conformable to <code>m1</code>.</p>
+
+
+<h3>matrix.sum(m [, alpha [, init]])</h3>
+
+<p>Performs a linear fold on matrix <code>m</code> in element-order, that is,
+computes</p>
+
+<pre><code>    (...((init * alpha + m[1]) * alpha + m[2]) ... ) * alpha + m[n])
+</code></pre>
+
+<p>where <code>n = m:size"*"</code>.</p>
+
+<p>Parameters <code>alpha</code> and <code>init</code> default to 1 and 0
+respectively; in particular, <code>matrix.sum(m)</code> computes the simple
+sum of the entries in <code>m</code>. It is semantically equivalent to</p>
+
+<pre><code>    matrix.fold(m, function(a, e) return a * alpha + e end, init)
+</code></pre>
+
+<p><strong>See also</strong>: <code>matrix.fold</code></p>
+
+
+<h3>matrix.min(m)</h3>
+
+<p>Returns the <em>minimum</em> element in <code>m</code> and the minimizing
+element-order index of <code>m</code>. Complex numbers are compared based on
+their real parts, and their imaginary parts are only used to break ties.</p>
+
+<p><strong>See also</strong>: <code>matrix.max</code>, <code>matrix.sort</code></p>
+
+
+<h3>matrix.max(m)</h3>
+
+<p>Returns the <em>maximum</em> element in <code>m</code> and the maximizing
+element-order index of <code>m</code>. Complex numbers are compared based on
+their real parts, and their imaginary parts are only used to break ties.</p>
+
+<p><strong>See also</strong>: <code>matrix.min</code>, <code>matrix.sort</code></p>
+
+
+<h3>matrix.sort (m [, decreasing [, returnindex]])</h3>
+
+<p>Sorts <code>m</code> <em>in-place</em>. If <code>decreasing</code> is
+<strong>true</strong>, sorts in decreasing order. If <code>returnindex</code>
+is <strong>true</strong> returns <code>index</code> such that
+<code>m[i]</code> was <code>m[index[i]]</code> before sorting, where
+<code>i</code> is in element-order; otherwise, returns <code>m</code>.</p>
+
+<p>As in <code>matrix.min</code> and <code>matrix.max</code>, complex numbers
+are compared based on their real parts, and their imaginary parts are only
+used to break ties.</p>
+
+<p>Example:</p>
+
+<pre><code>    iv = matrix.sort(v, false, true) -- increasing, return index
+    x = matrix.new(matrix.shape(v, 1, true))
+    x[iv] = v -- restore v
+</code></pre>
+
+<p><strong>See also</strong>: <code>matrix.min</code>, <code>matrix.max</code></p>
+
+
+<h3>matrix.linspace(a, b [, n])</h3>
+
+<p>Returns a vector <code>v</code> of length <code>n</code> -- taken to be
+<code>int(|b - a| + 1)</code> if not specified -- such that
+<code>v[i] = (i - 1) * s</code> where
+<code>s</code> is <code>(b - a) / (n - 1)</code>, and so <code>v[1] = a</code>
+and <code>v[n] = b</code>.</p>
+
+<p>Examples:</p>
+
+<pre><code>    v = linspace(1, n) -- v = 1:n
+
+    function arith (a, r, n)
+      return linspace(a, r * (n - 1) + a, n)
+    end
+
+    function seq (a, b, step)
+      local n = floor(abs((b - a) / s + 1))
+      return linspace(a, b, n)
+    end
+</code></pre>
+
+
+<h3>matrix.dot(a, b [, trans])</h3>
+
+<p>Computes the dot product of conformable matrices <code>a</code> and
+<code>b</code>, <code>a^H b</code> as the sum of their element-wise product.
+If <code>trans</code> is <strong>true</strong>, the conjugate of
+<code>a</code> is <em>not</em> used (and so <code>a^T b</code> is actually
+computed.)</p>
+
+
+<h3>matrix.cross(a, b [, inplace])</h3>
+
+<p>Computes the cross product of ternary vectors <code>a</code> and
+<code>b</code> in-place in <code>a</code> if <code>inplace</code> is
+<strong>true</strong>.</p>
+
+
+<h3>matrix.col(m, i)</h3>
+
+<p>Returns a <em>reference</em> to the <code>i</code>-th column of the
+two-dimensional matrix <code>m</code>.</p>
+
+<h3>matrix.transpose (m [, hermitian])</h3>
+
+<p>Returns the transpose of matrix <code>m</code>. If <code>hermitian</code>
+is <strong>true</strong>, returns the conjugate transpose of
+<code>m</code>.</p>
+
+<h3>matrix.diag(m [, shift])</h3>
+
+<p>If <code>m</code> is a vector, returns a square matrix such that the
+<code>shift</code> diagonal of the matrix is <code>m</code>; otherwise, if
+<code>m</code> is two-dimensional, returns a reference to the
+<code>shift</code> diagonal of <code>m</code>. If <code>shift</code> is zero
+(the default value), the main diagonal is referenced; if
+<code>shift &gt; 0</code>, the <code>shift</code> diagonal above the
+main diagonal is referenced, and if <code>shift &lt; 0</code>, the
+<code>shift</code> diagonal below the main diagonal is referenced.</p>
+
+<p>Example:</p>
+
+<pre><code>    function trace (m)
+      local r, c = m:shape()
+      assert(m:size"#" == 2 and r == c, "square matrix expected")
+      return m:diag():sum()
+    end
+</code></pre>
+
+
+<h3>matrix.concat(m1, ..., mn [, colcat])</h3>
+
+<p>Concatenates conformable matrices <code>m1</code>, <code>...</code>,
+<code>mn</code> <em>row-wise</em>. If <code>colcat</code> is
+<strong>true</strong>, concatenates <em>column-wise</em>.</p>
+
+
+<h3>matrix.c(v1, ..., vn)</h3>
+
+<p>Concatenates vectors or numbers <code>v1</code>, <code>...</code>,
+<code>vn</code> into a new vector.</p>
+
+
+<h3>matrix.swap (a, b)</h3>
+
+<p>Swaps the contents of conformable vectors <code>a</code> and
+<code>b</code>.</p>
+
+
+<h3>matrix.pivot(m, pvt [, colpivot [, inplace]])</h3>
+
+<p>Given pivot vector <code>pvt</code>, returns a new matrix <code>p</code>
+with the same rows of <code>m</code> but with rows <code>i</code> and
+<code>pvt[i]</code> swapped. Note that, in particular, <code>p = P * m</code>,
+where <code>P = eye(#m):pivot(pvt)</code>, that is, <code>P</code> is the
+permutation matrix for <code>pvt</code>.</p>
+
+<p>If <code>colpivot</code> is <strong>true</strong>, columns are swapped
+instead of rows, that is, returns <code>p = m * P</code> where
+<code>P = eye(#m):pivot(pvt, true)</code>.</p>
+
+<p>If <code>inplace</code> is <strong>true</strong>, rows/columns are swapped
+<em>in-place</em>.</p>
+
+<p>Examples:</p>
+
+<pre><code>    function perm (p) -- column permutation
+      local n = #p
+      local s = matrix.linspace(1, n):pivot(p)
+      local P = matrix.zeros(n, n)
+      for i = 1, n do P[i][s[i]] = 1 end
+      return P
+    end
+
+    -- see `matrix.lu` and `matrix.qr` for details: 
+    require "numlua.seeall"
+    l, u, p = lu(a)
+    print(pretty(perm(p) * a)) -- = a:pivot(p)) = l * u
+    q, r, p = qr(a,true)
+    print(pretty(q * r * t(perm(p)))) -- = (q * r):pivot(p,true) = a
+</code></pre>
+
+
+<h3>matrix.trmul (x, A [, uplo [, invert [, trans [, side]]]])</h3>
+
+<p>For conformable two-dimensional matrices <code>A</code> and <code>x</code>,
+<code>A</code> square, returns the result of <code>tri(A) * x</code>
+<em>in-place</em> in <code>x</code>, where <code>tri(A)</code> takes the lower
+triangle section of <code>A</code> if <code>uplo == "l"</code> or
+<code>uplo == "L"</code>, or the upper triangle section of <code>A</code> if
+<code>uplo == "u"</code> or <code>uplo == "U"</code>. The default value for
+<code>uplo</code> is <code>"L"</code>.</p>
+
+<p>If <code>invert</code> is <strong>true</strong>, multiplies by the inverse
+of <code>A</code>.</p>
+
+<p>If <code>trans == "t"</code> or <code>trans == "T"</code>, returns
+<code>tri(A)^T * x</code>; if <code>trans == "c"</code> or
+<code>trans == "C"</code>, returns <code>tri(A)^H * x</code> (conjugate
+transpose); if <code>trans == "n"</code> or <code>trans == "N"</code>, does
+nothing (default behavior).</p>
+
+<p>If <code>side == "l"</code> or <code>side == "L"</code>, <code>A</code> is
+multiplied at the left of <code>x</code> (default); if
+<code>side == "r"</code> or <code>side == "R"</code>, <code>A</code> is
+multiplied at the right, that is, returns <code>x * tri(A)</code>.</p>
+
+<p>For examples, see <code>matrix.lu</code> and <code>matrix.qr</code>.</p>
+
+
+<h3>matrix.hemul (C, A, [, inner, [, what [, alpha]]])</h3>
+
+<p>Given a Hermitian matrix <code>C</code>, performs the Hermitian update
+<code>C = C + alpha * A^H * A</code> if <code>inner</code> is
+<strong>true</strong>, or <code>C = C + alpha * A * A^H</code> otherwise. The
+default value for <code>alpha</code> is 1.</p>
+
+<p>Parameter <code>what</code> specifies how <code>C</code> is to be updated;
+if <code>what == "l"</code> or <code>what == "L"</code>, only the lower
+triangle of <code>C</code> is updated; if <code>what == "u"</code> or
+<code>what == "U"</code>, only the upper triangle of <code>C</code> is
+updated; if <code>what == "f"</code> or <code>what == "F"</code>, the lower
+triangle of <code>C</code> is updated by the multiplication and reflected to
+the strict upper triangle. The default value for <code>what</code> is "F".</p>
+
+<p>Example:</p>
+
+<pre><code>    -- generates Wishart deviates
+    function wishart (S, n)
+      local m = #S
+      local L = assert(chol(S, "L")) -- Cholesky factor: S = L * L^T
+      local c = zeros(m) -- cache
+      return function ()
+        local w = zeros(m, m)
+        for i = 1, n - 1 do
+          c = trmul(rnorm(0, 1, c), L) -- c ~ N(0, S)
+          w = hemul(w, c, false, "L") -- w = w + c * c^T
+        end
+        return hemul(w, trmul(rnorm(0, 1, c), L)) -- n-th run: full hemul
+      end
+    end
+</code></pre>
+
+
+<h3>matrix.mmul (C, A, B [, transA, transB, alpha])</h3>
+
+<p>For conformable matrices <code>A</code>, <code>B</code>, and
+<code>C</code>, updates <code>C</code> with the multiplication
+<code>C = C + alpha * transA(A) * transB(B)</code>. Parameters
+<code>transA</code> and <code>transB</code> specify possible operations for
+<code>A</code> and <code>B</code>:</p>
+
+<ul>
+<li><code>"n"</code> or <code>"N"</code> does nothing (default);</li>
+<li><code>"t"</code> or <code>"T"</code> takes the transpose;</li>
+<li><code>"c"</code> or <code>"C"</code> takes the conjugate transpose.</li>
+</ul>
+
+<p>If <code>B</code> is a vector, <code>transB</code> is ignored. Moreover,
+<code>A</code> can only be a vector if <code>B</code> is also a vector, in
+which case the outer product <code>A * B^H</code> is computed regardless of
+<code>transA</code> and <code>transB</code>.</p>
+
+
+<h3>matrix.norm(m [, what])</h3>
+
+<p>Computes the norm of <code>m</code> according to parameter <code>what</code>:</p>
+
+<ul>
+<li>if <code>what</code> is a number <code>p</code>, computes the Lp norm</li>
+<li><code>what == "m"</code> or <code>what == "M"</code>: computes
+<code>max(abs(m))</code></li>
+<li><code>what == "o"</code> or <code>what == "O"</code>: computes the one
+norm, that is, the maximum column sum if <code>m</code> is a two-dimensional
+matrix</li>
+<li><code>what == "i"</code> or <code>what == "I"</code>: computes the
+infinity (sup) norm, that is, the maximum row sum if <code>m</code> is a
+two-dimensional matrix</li>
+<li><code>what == "f"</code> or <code>what == "F"</code>: computes the
+Frobenius norm</li>
+</ul>
+
+<p>The default value for <code>what</code> is <code>"F"</code>. If
+<code>what == "m"</code>, <code>what == "M"</code>,
+<code>what == "i"</code>, or <code>what == "I"</code>, also returns the index
+the maximizes the norm.</p>
+
+
+<h3>matrix.chol(A [, what [, inplace]])</h3>
+
+<p>Computes the Cholesky factorization of symmetric positive-definite matrix
+<code>A</code>. Parameter <code>what</code> defines the computation:</p>
+
+<ul>
+<li>If <code>what == "l"</code> or <code>what == "L"</code>, the default
+value, references only the lower triangle of <code>A</code> and returns a
+lower triangular matrix <code>L</code> such that <code>A = L *
+  L^H</code>;</li>
+<li>If <code>what == "u"</code> or <code>what == "U"</code>, references only
+the upper triangle of <code>A</code> and returns an upper triangular matrix
+<code>U</code> such that <code>A = U^H * U</code>.</li>
+</ul>
+
+<p>If an internal error occurs, returns <strong>nil</strong> and an error
+message; if <code>A</code> is not positive-definite, returns
+<strong>false</strong> and a warning message. If <code>inplace</code> is
+<strong>true</strong>, overwrites <code>A</code> with its Cholesky factor.</p>
+
+<p>Examples:</p>
+
+<pre><code>    function matrix.isposdef (m)
+      local c, msg = chol(m)
+      if c == nil then error(msg) end
+      return not c == false
+    end
+
+    -- generates multivariable normal deviates (also check rng.rmvnorm)
+    function mvnorm (mu, S)
+      local L = assert(chol(S, "L")) -- Cholesky factor: S = L * L^T
+      return function (dest)
+        local dest = dest or zeros(#mu)
+        local s = rnorm(0, 1, dest) -- s ~ N(0, I_n)
+        s = trmul(s, L) -- s = L * s, s ~ N(0, S)
+        s = add(s, mu, true) -- s = s + mu, s ~ N(mu, S)
+        return s
+      end
+    end
+</code></pre>
+
+<p><strong>See also</strong>: <code>matrix.hemul</code>,
+<code>matrix.trmul</code></p>
+
+
+<h3>matrix.lu(A [, inplace])</h3>
+
+<p>Computes the LU decomposition of <code>A</code>: returns an unit lower
+triangular matrix <code>L</code>, an upper triangular matrix <code>U</code>
+and a permutation vector <code>pvt</code> such that
+<code>A:pivot(pvt) = L * U</code>, or equivalently,
+<code>A = P^T * L * U</code> where <code>P = eye(#A):pivot(pvt)</code>. If
+<code>inplace</code> is <strong>true</strong>, both <code>L</code> and
+<code>U</code> are returned <em>in-place</em> at <code>A</code>,
+<code>L</code> on the strict lower triangle and <code>U</code> on the
+upper triangle.</p>
+
+<p>Examples:</p>
+
+<pre><code>    -- compute determinant of m
+    function det (m)
+      local c = assert(lu(copy(m), true)) -- in-place on copy
+      return prod(diag(c))
+    end
+
+    -- solve linear system A * x = b
+    function linsolve (A, b)
+      local l, u, p = lu(A)
+      local x = b:pivot(p) -- x = eye(#A):pivot(p) * b
+      x:trmul(l, 'l', true) -- x = inv(l) * x
+      x:trmul(u, 'u', true) -- x = inv(u) * x
+      return x
+    end
+</code></pre>
+
+<p><strong>See also</strong>: <code>matrix.pivot</code></p>
+
+
+<h3>matrix.rcond(A [, what [, inplace]])</h3>
+
+<p>Estimates the reciprocal of the condition number of matrix <code>A</code>
+in 1-norm, depending on parameter <code>what</code>:</p>
+
+<ul>
+<li><code>what == "d"</code> or <code>what == "D"</code>, assumes that
+<code>A</code> is a diagonal matrix;</li>
+<li><code>what == "l"</code> or <code>what == "L"</code>, assumes that
+<code>A</code> is a lower triangular matrix, if <code>what == "u"</code> or
+<code>what == "U"</code>, assumes <code>A</code> is an upper triangular
+matrix;</li>
+<li><code>what == "p"</code> or <code>what == "P"</code>, assumes that
+<code>A</code> is a Hermitian positive-definite matrix;</li>
+<li><code>what == "g"</code> or <code>what == "G"</code>, the default value,
+assumes that <code>A</code> is a general matrix.</li>
+</ul>
+
+<p>If <code>inplace</code> is <strong>true</strong> and <code>what</code>
+codes for <code>A</code> as being Hermitian positive-definite or general,
+<code>A</code> is overwritten with either a Cholesky or LU decomposition
+respectively.</p>
+
+<p><strong>See also</strong>: <code>matrix.svd</code>, <code>matrix.inv</code></p>
+
+
+<h3>matrix.inv(A [, what [, inplace [, norcond]]])</h3>
+
+<p>Returns the inverse of square matrix <code>A</code> and an estimate of the
+reciprocal of its condition number, according to parameter
+<code>what</code>:</p>
+
+<ul>
+<li><code>what == "d"</code> or <code>what == "D"</code>, assumes that
+<code>A</code> is a diagonal matrix;</li>
+<li><code>what == "l"</code> or <code>what == "L"</code>, assumes that
+<code>A</code> is a lower triangular matrix, if <code>what == "u"</code> or
+<code>what == "U"</code>, assumes <code>A</code> is an upper triangular
+matrix;</li>
+<li><code>what == "p"</code> or <code>what == "P"</code>, assumes that
+<code>A</code> is a Hermitian positive-definite matrix;</li>
+<li><code>what == "g"</code> or <code>what == "G"</code>, the default value,
+assumes that <code>A</code> is a general matrix.</li>
+</ul>
+
+<p>If <code>inplace</code> is <strong>true</strong> and <code>what</code>
+codes for <code>A</code> as being Hermitian positive-definite or general,
+<code>A</code> is overwritten with either a Cholesky or LU decomposition
+respectively.</p>
+
+<p>If <code>norcond</code> is <strong>true</strong>, the reciprocal of the
+condition number is not estimated.</p>
+
+<p>Example:</p>
+
+<pre><code>    -- Square-root of a matrix A by Denman-Beavers algorithm
+    function dbsqrtm (A, tol, maxiters)
+      local opmode = numlua.opmode(true) -- set in-place operations
+      local iY, iZ = zeros(A:shape()), zeros(A:shape()) -- buffers
+      local s, n = inf, 1 -- norm(Y), #iterations
+      local Y, Z = copy(A), eye(#A) -- initialize
+      while true do
+        iY._, iZ._ = Y, Z
+        Y, Z = (Y + inv(iZ)) / 2, (Z + inv(iY)) / 2 -- in-place
+        -- check termination:
+        local f = norm(Y)
+        if abs(f - s) &lt;= tol or n &gt; maxiters then break end
+        s, n = f, n + 1
+      end
+      numlua.opmode(opmode) -- restore previous mode
+      return Y, Z, s
+    end
+</code></pre>
+
+<p><strong>See also</strong>: <code>matrix.rcond</code></p>
+
+
+<h3>matrix.svd(A [, what])</h3>
+
+<p>Computes the singular value decomposition of
+<code>m</code>-by-<code>n</code> matrix <code>A</code>. The SVD is specified
+as <code>A = U * S * V^H</code>, where <code>U</code> and <code>V</code> are
+unitary matrices whose first <code>min(m, n)</code> columns represent the left
+and right singular vectors of <code>A</code>, respectively, and <code>S</code>
+is a diagonal matrix whose <code>min(m, n)</code> diagonal entries contain the
+singular values of <code>A</code>. <code>U</code>, <code>V</code>, and
+<code>S</code> are computed according to parameter <code>what</code>:</p>
+
+<ul>
+<li><code>what == "n"</code> or <code>what == "N"</code>, returns only the
+singular values of <code>A</code>;</li>
+<li><code>what == "l"</code> or <code>what == "L"</code>, the first
+<code>min(m, n)</code> columns of <code>U</code> are stored <em>in-place</em>
+at <code>A</code>;</li>
+<li><code>what == "r"</code> or <code>what == "R"</code>, the first
+<code>min(m, n)</code> rows of <code>V^H</code> are stored <em>in-place</em>
+at <code>A</code>;</li>
+<li><code>what == "a"</code> or <code>what == "A"</code>, the default value,
+returns <code>U</code>, <code>S</code>, and <code>V^H</code>.</li>
+</ul>
+
+<p>The singular values are returned in descending order. Note that
+<code>V^H</code> is returned, not <code>V</code>.</p>
+
+<p>If an internal error occurs, returns <strong>nil</strong> and a diagnostic
+message; if the algorithm fails to converge, returns <strong>false</strong>
+and a warning message.</p>
+
+<p>Examples:</p>
+
+<pre><code>    function cond (m)
+      local s = assert(svd(m, "n")) -- just singular values
+      return s[1] / s[#m] -- condition number
+    end
+
+    local lt = function (x) return function(e) return e &lt; x end end
+    function matrix.rank (m, tol) -- effective rank according to tol
+      local s = assert(svd(m, "n")) -- just singular values
+      local tol = tol or 0
+      if tol &lt;= 0 then -- set default tolerance?
+        tol = max(m:shape()) * eps * s[1]
+      end
+      local r = s:find(lt(tol))
+      if r == nil then -- all &gt; tol?
+        return #s -- full rank: min(m:shape())
+      end
+      return r - 1 -- last position &gt; tol
+    end
+</code></pre>
+
+<p>For other examples, see <code>matrix.null</code>, <code>matrix.orth</code>,
+and <code>matrix.pinv</code> in <code>matrix.lua</code>.</p>
+
+<p><strong>See also</strong>: <code>matrix.rcond</code></p>
+
+
+<h3>matrix.qr(A [, permute [, inplace]])</h3>
+
+<p>Computes the QR factorization of matrix <code>A</code>, that is, returns an
+unitary matrix <code>Q</code> and an upper trapezoidal matrix <code>R</code>
+such that <code>A = Q * R</code>.</p>
+
+<p>If <code>permute</code> is <strong>true</strong>, computes the QR
+factorization with column pivoting by also returning a permutation vector
+<code>p</code> such that <code>A = (Q * R):pivot(p, true)</code>, that is,
+<code>P = eye(A:size(2)):pivot(p, true)</code> satisfies
+<code>A * P^T = Q * R</code>.</p>
+
+<p>In <code>inplace</code> is <strong>true</strong>, <code>A</code> is
+overwritten with <code>R</code>.</p>
+
+<p>Example:</p>
+
+<pre><code>    -- solve linear system A * x = b
+    function linsolve (A, b)
+      local q, r = qr(A)
+      local x = zeros(#b):mmul(A, b, 't') -- x = t(A) * b
+      x:trmul(r, 'u', true, 't') -- x = t(inv(r)) * x
+      x:trmul(r, 'u', true) -- x = inv(r) * x
+      return x
+    end
+</code></pre>
+
+
+<h3>matrix.eig(A [, what [, hermitian]])</h3>
+
+<p>Computes the eigenvalues of <code>A</code>, and optionally the eigenvectors
+according to parameter <code>what</code>:</p>
+
+<ul>
+<li><code>what == "n"</code> or <code>what == "N"</code>: do not compute the
+eigenvectors of <code>A</code>, just return the eigenvalues of <code>A</code>
+(in a vector);</li>
+<li><code>what == "l"</code> or <code>what == "L"</code>: returns the
+eigenvalues (in a vector) and the left eigenvectors of <code>A</code> (in a
+matrix);</li>
+<li><code>what == "r"</code> or <code>what == "R"</code>: the default option,
+returns the eigenvalues (in a vector) and the right eigenvectors of
+<code>A</code> (in a matrix);</li>
+<li><code>what == "a"</code> or <code>what == "A"</code>: returns the
+eigenvalues and both left and right eigenvectors of <code>A</code>.</li>
+</ul>
+
+<p>Note that the right eigenvectors of <code>A</code> are the left eigenvalues
+of <code>A^H</code> and vice-versa. If <code>hermitian</code> is
+<strong>true</strong>, <code>A</code> is assumed to be Hermitian and only its
+upper triangle is accessed. </p>
+
+<p>When computing the eigenvalues -- and optionally eigenvectors -- of
+<code>A</code>, the matrix is <em>balanced</em> to improve accuracy; see
+<code>matrix.balance</code> for a description of the operations. There is
+currently no way of preventing balancing.</p>
+
+<p>Examples:</p>
+
+<pre><code>    -- condition number
+    function cond (m)
+      local x = zeros(#m, #m):hemul(m) -- x = m * t(m)
+      local e = eig(x, "n", true) -- sqrt(e) are singular values of m
+      return math.sqrt(math.abs(max(e) / min(e)))
+    end
+
+    -- if F[n] is the n-th Fibonacci number,
+    -- {{F[n-1], F[n]}, {F[n], F[n+1]}} = {{0, 1}, {1, 1}} ^ n
+    local s, V = eig(matrix{{0, 1}, {1, 1}}, "r", true)
+    local v = V[1] * V[2] -- element-wise multiplication
+    local w = zeros(2) -- workspace
+    function fib (n)
+      w._ = s; w:pow(n, true) -- w = s ^ n, in-place
+      return dot(v, w) -- V * diag(s ^ n) * t(V)
+    end
+</code></pre>
+
+<p><strong>See also</strong>: <code>matrix.balance</code>,
+<code>matrix.svd</code></p>
+
+
+<h3>matrix.balance (A [, what])</h3>
+
+<p>Balances a matrix <code>A</code> as a way to reduce its 1-norm and thus
+improve the accuracy of the computed eigenvalues and eigenvectors. The
+operations involve, first, <em>permuting</em> <code>A</code> by a similarity
+transformation to isolate eigenvalues in the first 1 to <code>l</code> and
+last <code>h</code> to <code>#A</code> elements of the diagonal, and then
+<em>scaling</em> by a diagonal similarity transformation to rows and columns
+<code>l + 1</code> to <code>h - 1</code> to make them as close in norm as
+possible. Parameter <code>what</code> controls which operations are performed
+to balance <code>A</code>:</p>
+
+<ul>
+<li><code>what == "n"</code> or <code>what == "N"</code>: nothing is done (no
+balancing);</li>
+<li><code>what == "p"</code> or <code>what == "P"</code>: permute only;</li>
+<li><code>what == "s"</code> or <code>what == "S"</code>: scale only;</li>
+<li><code>what == "b"</code> or <code>what == "B"</code>: both permute and
+scale, the default option</li>
+</ul>
+
+<p><strong>See also</strong>: <code>matrix.eig</code></p>
+
+
+<h3>matrix.ls (A, b [, svd [, tol [, inplace]]])</h3>
+
+<p>Computes the least-squares solution to the linear system
+<code>A * x = b</code>, that is, finds <code>x</code> that minimizes the
+2-norm of <code>b - A * x</code>, where <code>A</code> is a
+<code>m</code>-by-<code>n</code> matrix. Parameter <code>b</code> can be a
+(<code>m</code>-by-<code>nrhs</code>) matrix containing many right-hand side
+vectors as columns.</p>
+
+<p>If <code>svd</code> is <strong>true</strong>, the solution is found using a
+singular value decomposition; otherwise, a QR factorization is applied. The
+effective rank of <code>A</code> is relative to <code>tol</code>, which
+defaults to <code>max(m, n) * mathx.eps</code> (see Example in
+<code>matrix.svd</code> for details).</p>
+
+<p>If <code>inplace</code> is <strong>true</strong>, the solution is returned
+in <code>b</code> if the system is not underdetermined, that is, if
+<code>A</code> has at least as many rows as columns. In this case,
+<code>b:slice(1,n)</code> contains the solutions <code>x</code> and the sum of
+squares for the <code>i</code>-th column of <code>b:slice(n+1, m)</code> is
+the residual sum of squares for the solution of the <code>i</code>-th
+right-hand side.</p>
+
+<p>The solution and the effective rank are returned; in addition, if
+<code>svd</code> is <strong>true</strong>, the singular values of
+<code>A</code> are also returned (as a vector).</p>
+
+<p>Example:</p>
+
+<pre><code>    -- basic LS linear model fitting
+    function matrix.lm (a, b, svd)
+      local m, n = a:shape()
+      assert(m &gt;= n, "system is underdetermined")
+      assert(b:size"#" == 1, "single RHS expected")
+      local x, rank = ls(a, b, svd)
+      -- report summary statistics
+      local coef = x:slice(1, n)
+      local rss = (b - a * coef):norm() ^ 2
+      local rss0 = (b - b:sum() / m):norm() ^ 2
+      local df = m - rank
+      local F = df / (rank - 1) * (rss0 / rss - 1)
+      local pvalue = 1 - stat.pf(F, rank - 1, df)
+      return {coef = coef, rss = rss, df = df, F = F, pvalue =  pvalue}
+    end
+</code></pre>
+
+<p><strong>See also</strong>: <code>matrix.svd</code>, <code>matrix.qr</code></p>
+
+
+<h3>matrix.fft(m [, inverse [, wisdomonly [, inplace]]])</h3>
+
+<p>Computes the fast Fourier transform of <em>complex</em> matrix
+<code>m</code>. If <code>inverse</code> is <strong>true</strong>, computes the
+<em>normalized</em> inverse FFT. <code>wisdomonly</code> is a FFTW-specific
+parameter: if <strong>true</strong>, a plan to compute the transform is only
+created if wisdom is available for the given problem, that is, a
+<code>FFTW_WISDOM_ONLY</code> flag is passed when building the plan. The
+default flag is <code>FFTW_ESTIMATE</code>. If <code>inplace</code> is
+<strong>true</strong>, <code>m</code> is updated <em>in-place</em>.</p>
+
+<p><strong>See also</strong>: <code>matrix.fct</code>, <code>fft.plan</code></p>
+
+
+<h3>matrix.fct(m [, inverse [, wisdomonly [, inplace]]])</h3>
+
+<p>Computes the discrete cosine transform of <em>real</em> matrix
+<code>m</code>. If <code>inverse</code> is <strong>true</strong>, computes the
+<em>normalized</em> inverse DCT. <code>wisdomonly</code> is a FFTW-specific
+parameter: if <strong>true</strong>, a plan to compute the transform is only
+created if wisdom is available for the given problem, that is, a
+<code>FFTW_WISDOM_ONLY</code> flag is passed when building the plan. The
+default flag is <code>FFTW_ESTIMATE</code>. If <code>inplace</code> is
+<strong>true</strong>, <code>m</code> is updated <em>in-place</em>.</p>
+
+<p><strong>See also</strong>: <code>matrix.fft</code>, <code>fft.plan</code></p>
+
+
+<h3>matrix.save(m, filename)</h3>
+
+<p>Saves matrix <code>m</code> in HDF5 file <code>filename</code>.</p>
+
+
+<h3>matrix.load(filename)</h3>
+
+<p>Loads a matrix from HDF5 file <code>filename</code> and returns the loaded
+matrix.</p>
+
+
+
+<h2 id="fft"><code>fft</code></h2>
+<small>Fast Fourier transforms</small>
+
+<p>The <code>fft</code> module implements fast Fourier transforms. The simple
+interface to FFTs comprehends just <code>matrix.fft</code> and
+<code>matrix.fct</code> which operate directly on a matrix. If, however, you
+intend to execute the same transform many times it might be more efficient to
+use a <em>plan</em>, so check <code>fft.plan</code>. If more control on how
+plans are executed is needed, there is also an interface to the
+<em>wisdom</em> of FFTW in <code>fft.wisdom</code>.</p>
+
+<p>Example:</p>
+
+<pre><code>    &gt; a = matrix({{1, 2, 3}, {0, -1, -4}}, true)
+    &gt; b = matrix(a:shape(1, true))
+    &gt; p = fft.plan(b, false, fft.flag["measure"]) -- direct transform
+    &gt; ip = fft.plan(b, true, fft.flag["measure"]) -- inverse transform
+    &gt; b._ = a
+    &gt; p(); print(b:pretty()) -- execute direct
+                      1+0i    1-1.7320508075689i    1+1.7320508075689i
+                     11+0i   -4+3.4641016151378i   -4-3.4641016151378i
+    &gt; ip(); print(b:pretty()) -- execute inverse
+        1+0i    2+0i    3+0i
+        0+0i   -1+0i   -4+0i
+</code></pre>
+
+
+<h3>fft.plan(m [[, inverse], flag])</h3>
+
+<p>Returns a FFTW plan that uses matrix <code>m</code> as a buffer to apply
+discrete transforms <em>in-place</em> in <code>m</code>. If <code>m</code> is
+complex, a fast Fourier transform is executed, otherwise, if <code>m</code> is
+real, a discrete cosine transform is performed. If <code>inverse</code> is
+<strong>true</strong>, <em>normalized</em> inverse transforms are
+computed.</p>
+
+<p>Parameter <code>flag</code> specifies a planner flag. Possible values are
+available in table <code>fft.flag</code>. The default flag is
+<code>fft.flag["measure"]</code>, <code>FFTW_MEASURE</code>. Note that only
+<code>"estimate"</code> (<code>FFTW_ESTIMATE</code>) and
+<code>"wisdomonly"</code> (<code>FFTW_WISDOM_ONLY</code>) do <em>not</em>
+overwrite buffer <code>m</code>; for all other flags, <code>m</code> has to be
+initialized <em>after</em> the plan is created.</p>
+
+<p>If <code>plan = fft.plan(m, ...)</code>, <code>#plan</code> returns
+<code>m</code> and <code>plan()</code> executes the plan.</p>
+
+<p><strong>See also</strong>: <code>matrix.fft</code>,
+<code>matrix.fct</code></p>
+
+
+<h3>fft.wisdom([wisdom])</h3>
+
+<p>Provides an interface for FFTW wisdoms. If <code>wisdom</code> is
+<strong>nil</strong>, returns the currently accumulated wisdom; if
+<code>wisdom</code> is <strong>true</strong>, forgets accumulated wisdom; if
+<code>wisdom</code> is a string, imports wisdom from it.</p>
+
+
+
+<h2 id="stat"><code>stat</code></h2>
+<small>Statistics and probability methods</small>
+
+<p>The <code>stat</code> module implements statistical routines: probability
+mass and density functions, cumulative distribution functions (cdf) and
+inverse cdf (quantile) functions for a number of distributions; and
+<em>factors</em>.</p>
+
+<h3>stat.factor(t)</h3>
+
+<p>Constructs a <em>factor</em> based on table <code>t</code>, a
+<em>sequence</em>. A factor is a more compact representation of <code>t</code>
+where each distinct entry -- a <em>level</em> -- is assigned an integer key,
+the <em>key level</em>. If <code>f</code> is a factor built from
+<code>t</code>, <code>f[i]</code> returns <code>t[i]</code>, <code>f(i)</code>
+returns the key level of <code>t[i]</code>, and <code>f()</code> returns the
+levels of <code>f</code> as a table; in particular, <code>f[i]</code> is
+equivalent to <code>f()[f(i)]</code>. The expression <code>#f</code> returns a
+vector with level counts, that is, <code>(#f)[l]</code> returns the number of
+entries in <code>t</code> with key level <code>l</code> and thus values
+<code>f()[l]</code>; note that <code>(#f):sum()</code> is <code>#t</code>.</p>
+
+<p>Example:</p>
+
+<pre><code>    &gt; f = stat.factor{"a", "c", "a", "a", "b", "c"}
+    &gt; for l, level in ipairs(f()) do print(l, level, (#f)[l]) end
+    1       a       3
+    2       c       2
+    3       b       1
+    &gt; for i = 1, (#f):sum() do print(i, f[i], f(i)) end
+    1       a       1
+    2       c       2
+    3       a       1
+    4       a       1
+    5       b       3
+    6       c       2
+</code></pre>
+
+<p><strong>See also</strong>: <code>factor.fold</code>,
+<code>factor.partition</code>, <code>factor.design</code></p>
+
+
+<h3>factor.fold(f, m, func [, init])</h3>
+
+<p>Folds the entries in matrix <code>m</code> according to the levels in
+factor <code>f</code> and fold function <code>func</code>, that is, for each
+key level <code>l</code>, returns a vector <code>v</code> such that <code>v[l]
+  = func(m[i1], func(m[i2], func(..., func(m[in], init)...)))</code> where
+<code>i1, ..., in</code> satisfy <code>f(i1) = ... = f(in) = l</code>. The
+default value for <code>init</code> is zero.</p>
+
+<p>Example:</p>
+
+<pre><code>    &gt; f = stat.factor{"a", "c", "a", "a", "b", "c"}
+    &gt; add2 = function(x, y) return x + y end
+    &gt; x = matrix.linspace(1, (#f):sum())
+    &gt; for l, v in f:fold(x, add2):entries() do print(l, v) end
+    1       8
+    2       8
+    3       5
+</code></pre>
+
+<p><strong>See also</strong>: <code>stat.factor</code>,
+<code>factor.partition</code></p>
+
+
+<h3>factor.partition(f, m)</h3>
+
+<p>Partitions the matrix <code>m</code> according to the levels in
+<code>f</code> by returning a table <code>t</code> such that <code>t[l]</code>
+is a vector containing the entries <code>i1, ..., in</code> in <code>m</code>
+such that <code>f(i1) = ... = f(in) = l</code>.</p>
+
+<p>Example:</p>
+
+<pre><code>    &gt; f = stat.factor{"a", "c", "a", "a", "b", "c"}
+    &gt; x = matrix.linspace(1, (#f):sum())
+    &gt; vprint = function(v) return table.concat(v:totable(), ", ") end
+    &gt; for l, v in ipairs(f:partition(x)) do print(l, vprint(v)) end
+    1       1, 3, 4
+    2       2, 6
+    3       5
+</code></pre>
+
+<p><strong>See also</strong>: <code>stat.factor</code>,
+<code>factor.fold</code></p>
+
+
+<h3>factor.design(f, [ref])</h3>
+
+<p>Retuns design matrix for factor <code>f</code>. If <code>ref</code> is zero
+(default value) then no contrasts are assumed; otherwise, return a "sum to
+zero" contrast matrix with <code>ref</code> as reference level.</p>
+
+<p>Example:</p>
+
+<pre><code>    &gt; f = stat.factor{"a", "c", "a", "a", "b", "c"}
+    &gt; print(f:design():pretty())
+       1   0   0
+       0   1   0
+       1   0   0
+       1   0   0
+       0   0   1
+       0   1   0
+    &gt; print(f:design(2):pretty())
+        1    1    0
+       -1    1   -1
+        1    1    0
+        1    1    0
+        0    1    1
+       -1    1   -1
+</code></pre>
+
+
+<h3>stat.dbeta(x, a, b)<br />
+stat.pbeta(x, a, b)<br />
+stat.qbeta(p, a, b)</h3>
+
+<p>Computes the density (<code>dbeta</code>), cumulative distribution function
+(<code>pbeta</code>), and inverse cdf (<code>qbeta</code>) for the
+<em>beta</em> distribution with parameters <code>a &gt;= 0</code> and
+<code>b &gt;= 0</code>. The density is given by
+<code>x^(a - 1) * (1 - x)^(b - 1) / B(a, b)</code> for
+<code>0 &lt;= x &lt;= 1</code>, where <code>B(a, b)</code> is the beta
+function.</p>
+
+<p><strong>See also</strong>: <code>mathx.beta</code></p>
+
+
+<h3>stat.dbinom(s, xn, pr)<br />
+stat.pbinom(s, xn, pr)<br />
+stat.qbinom(p, xn, pr)</h3>
+
+<p>Computes the probability mass function (<code>dbinom</code>), cumulative
+distribution function (<code>pbinom</code>), and inverse cdf
+(<code>qbinom</code>) for the <em>binomial</em> distribution with size
+<code>xn &gt;= 0</code> and probability of success on each trial
+<code>0 &lt;= pr &lt;= 1</code>. The density is given by
+<code>choose(xn, s) * pr^s * (1 - pr)^(xn - s)</code> for
+<code>s = 0, ..., xn</code>, where <code>choose(xn, s)</code> is the binomial
+coefficient.</p>
+
+
+<h3>stat.dchisq(x, df [, pnonc])<br />
+stat.pchisq(x, df [, pnonc])<br />
+stat.qchisq(p, df [, pnonc])</h3>
+
+<p>Computes the density (<code>dchisq</code>), cumulative distribution
+function (<code>pchisq</code>), and inverse cdf (<code>qchisq</code>) for the
+<em>chi-squared</em> distribution with <code>df &gt; 0</code> degrees of
+freedom and non-centrality parameter <code>pnonc</code>. If
+<code>pnonc ~= 0</code>, <code>df</code> can be zero.</p>
+
+
+<h3>stat.dexp(x [, r])<br />
+stat.pexp(x [, r])<br />
+stat.qexp(p [, r])</h3>
+
+<p>Computes the density (<code>dexp</code>), cumulative distribution function
+(<code>pexp</code>), and inverse cdf (<code>qexp</code>) for the
+<em>exponential</em> distribution with rate <code>r</code>. The default value
+for <code>r</code> is one. The exponential distribution has density
+<code>r * exp(-r * x)</code>.</p>
+
+
+<h3>stat.df(x, dfn, dfd)<br />
+stat.pf(x, dfn, dfd [, pnonc])<br />
+stat.qf(p, dfn, dfd [, pnonc])</h3>
+
+<p>Computes the density (<code>df</code>), cumulative distribution function
+(<code>pf</code>), and inverse cdf (<code>qf</code>) for the <em>F</em>
+distribution with <code>dfn &gt;= 0</code> and <code>dfd &gt;= 0</code>
+degrees of freedom in the numerator and denominator, and non-centrality
+parameter <code>pnonc</code>.</p>
+
+
+<h3>stat.dgamma(x, shape [, rate])<br />
+stat.pgamma(x, shape [, rate])<br />
+stat.qgamma(p, shape [, rate])</h3>
+
+<p>Computes the density (<code>dgamma</code>), cumulative distribution
+function (<code>pgamma</code>), and inverse cdf (<code>qgamma</code>) for the
+<em>gamma</em> distribution with parameters <code>shape &gt;= 0</code> and
+<code>rate &gt;= 0</code>. The default value for <code>rate</code> is one. A
+gamma distribution with shape <code>s</code> and rate <code>r</code> has
+density <code>r^s / G(s) * x^(s - 1) * exp(-r * x)</code> where <code>G</code>
+is the gamma function, for <code>x &gt;= 0</code>.</p>
+
+<p><strong>See also</strong>: <code>mathx.gamma</code></p>
+
+
+<h3>stat.dhyper(x, r, b, n)<br />
+stat.phyper(x, r, b, n)</h3>
+
+<p>Computes the probability mass function (<code>dhyper</code>) and cumulative
+distribution function (<code>phyper</code>) for the <em>hypergeometric</em>
+distribution with parameters <code>r, b &gt;= 0</code> and
+<code>0 &lt;= n &lt;= r + b</code>. The density is given by
+<code>choose(r, x) * choose(b, n - x) / choose(r + b, n)</code> for
+<code>x = 0, ..., n</code>.</p>
+
+
+<h3>stat.dnbinom(s, xn, pr)<br />
+stat.pnbinom(s, xn, pr)<br />
+stat.qnbinom(p, xn, pr)</h3>
+
+<p>Computes the probability mass function (<code>dnbinom</code>), cumulative
+distribution function (<code>pnbinom</code>), and inverse cdf
+(<code>qnbinom</code>) for the <em>negative binomial</em> distribution with
+size <code>xn &gt;= 0</code> and probability of success on each trial
+<code>0 &lt;= pr &lt;= 1</code>. The density is given by
+<code>choose(xn + s - 1, s) * pr^xn * (1 - pr)^s</code> for
+<code>s = 0, ..., xn</code>, where <code>choose(xn + s - 1, s)</code> is the
+binomial coefficient.</p>
+
+
+<h3>stat.dnorm(x [, mean [, sd]])<br />
+stat.pnorm(x [, mean [, sd]])<br />
+stat.qnorm(p [, mean [, sd]])</h3>
+
+<p>Computes the density (<code>dnorm</code>), cumulative distribution function
+(<code>pnorm</code>), and inverse cdf (<code>qnorm</code>) for the
+<em>normal</em> distribution with parameters <code>mean</code> and standard
+deviation <code>sd &gt;= 0</code>. The default values for <code>mean</code>
+and <code>sd</code> are zero and one, respectively.</p>
+
+
+<h3>stat.dpois(s, l)<br />
+stat.ppois(s, l)<br />
+stat.qpois(p, l)</h3>
+
+<p>Computes the probability mass function (<code>dpois</code>), cumulative
+distribution function (<code>ppois</code>), and inverse cdf
+(<code>qpois</code>) for the <em>Poisson</em> distribution with mean
+<code>l &gt;= 0</code>. The density is given by
+<code>l^s * exp(-l) / s!</code> for <code>s = 0, 1, ...</code>.</p>
+
+
+<h3>stat.dt(x, df)<br />
+stat.pt(x, df)<br />
+stat.qt(p, df)</h3>
+
+<p>Computes the density (<code>dt</code>), cumulative distribution function
+(<code>pt</code>), and inverse cdf (<code>qt</code>) for the <em>Student
+  t</em> distribution with <code>df &gt;= 0</code> degrees of freedom.</p>
+
+
+
+<h2 id="rng">rng</h2>
+<small>Random number generation and deviates</small>
+
+<p>The <code>rng</code> module provides <em>random number generators</em>
+based on the Mersenne-Twister generator and netlib's <code>ranlib</code>.
+Objects can be created with <code>rng.new</code>, copied with
+<code>rng.copy</code>, and have their seed set with <code>rng.seed</code>.</p> 
+
+<p>The following methods sample deviates from a number of probability
+distributions or elements in a matrix object:</p>
+
+<pre><code>      rbeta    rchisq    rexp          rf  rgamma    rnorm
+    rmvnorm     runif  runifx  rdirichlet  rbinom  rnbinom
+      rpois  runifint  sample     lsample
+</code></pre>
+
+<p>Each one of these methods are closed on a <code>rng</code> object and each
+object <code>r</code> has a (uservalue) table containing its methods, that is,
+methods for which <code>r</code> is an upvalue. To retrieve the method table
+for <code>r</code>, use <code>#r</code>. For convenience, a "class"
+<code>rng</code> object <code>c</code> is always created and has its methods
+stored in the class table so that <code>rng.f</code> is
+<code>(#c).f</code>.</p> 
+
+<p>All random deviate methods accept an optional last parameter <code>v</code>
+that must be a <em>real</em> matrix that serves as destination: if
+<code>v</code> is provided, <code>v:size()</code> deviates are generated and
+stored in-place at <code>v</code>.</p>
+
+<p>Examples:</p>
+
+<pre><code>    &gt; n = 5
+    &gt; for i = 1, n do print(i, rng.rnorm()) end
+    1       -0.83608755044204
+    2       0.30498104946162
+    3       -1.227283848856
+    4       -0.91148894025705
+    5       0.28245551259444
+    &gt; r = rng.new()
+    &gt; v = (#r).rnorm(0, 1, matrix.new(n))
+    &gt; for i = 1, n do print(i, v[i]) end
+    1       -0.83608755044204
+    2       0.30498104946162
+    3       -1.227283848856
+    4       -0.91148894025705
+    5       0.28245551259444
+</code></pre>
+
+
+<h3>rng.new([seed])</h3>
+
+<p>Returns a new rng object <code>r</code> with seed <code>seed</code>. To
+obtain a table with methods that use <code>r</code>, call <code>#r</code>.</p>
+
+<p><strong>See also</strong>: <code>rng</code>, <code>rng.seed</code></p>
+
+
+<h3>rng.seed([seed])</h3>
+
+<p>Sets the seed of <code>rng</code> to <code>seed</code>; <code>seed</code>
+can be a number or a real vector.</p>
+
+
+<h3>rng.rbeta(a, b [, dest])</h3>
+
+<p>Returns random deviates from the beta distribution with shape parameters
+<code>a</code> (<code>a &gt; 0</code>) and <code>b</code>
+(<code>b &gt; 0</code>).</p>
+
+<p><strong>See also</strong>: <code>stat.dbeta</code></p>
+
+
+<h3>rng.rchisq(df [,xnonc [, dest]])</h3>
+
+<p>Returns random deviates from the chi-square distribution with degrees of
+freedom <code>df</code> (<code>df &gt; 0</code>) and optional non-centrality
+parameter <code>xnonc</code> (<code>xnonc &gt;= 0</code>, defaults to
+zero).</p>
+
+<p><strong>See also</strong>: <code>stat.dchisq</code></p>
+
+
+<h3>rng.rexp([av [, dest]])</h3>
+
+<p>Returns random deviates from the exponential distribution with mean
+<code>av</code> (defaults to one).</p>
+
+<p><strong>See also</strong>: <code>stat.dexp</code></p>
+
+
+<h3>rng.rf(dfn, dfd [, xnonc [, dest]])</h3>
+
+<p>Returns random deviates from the F distribution with degrees of freedom
+<code>dfn</code> and <code>dfd</code> (<code>dfn &gt; 0</code> and
+<code>dfd &gt; 0</code>) and optional non-centrality parameter
+<code>xnonc</code> (<code>xnonc &gt;= 0</code>, defaults to zero).</p>
+
+<p><strong>See also</strong>: <code>stat.df</code></p>
+
+
+<h3>rng.rgamma(a [, s [, dest]])</h3>
+
+<p>Returns random deviates from the gamma distribution with shape
+<code>a</code> and optional rate <code>s</code>.</p>
+
+<p><strong>See also</strong>: <code>stat.dgamma</code></p>
+
+
+<h3>rng.rnorm([m [, sd [, dest]]])</h3>
+
+<p>Returns random deviates from the normal distribution with mean
+<code>m</code> (defaults to zero) and standard deviation <code>sd</code>
+(<code>sd &gt; 0</code>, defaults to one).</p>
+
+<p><strong>See also</strong>: <code>stat.dnorm</code>, <code>rng.rmvnorm</code></p>
+
+
+<h3>rng.rmvnorm(m, S [, dest])</h3>
+
+<p>Returns random deviates from the multivariate normal distribution with mean
+<code>m</code>, a real vector of size <code>n</code>, and "standard deviation"
+<code>S</code> -- either a square matrix of order <code>n</code>, taken as the
+lower triangular Cholesky decomposition of the variance-covariance matrix, or
+a positive real vector of size <code>n</code> representing the square root of
+the diagonal of the variance-covariance matrix.</p>
+
+<p>Returns <code>S * u + m</code>, where <code>u</code> is sampled from
+<code>N(0, I_n)</code>.</p>
+
+<p><strong>See also</strong>: <code>matrix.chol</code>, <code>rng.rnorm</code></p>
+
+
+<h3>rng.runif([low [, high [, dest]]])</h3>
+
+<p>Returns random deviates from the uniform distribution between
+<code>low</code> (defaults to zero) and <code>high</code> (defaults to
+one).</p>
+
+<p><strong>See also</strong>: <code>stat.dunif</code></p>
+
+
+<h3>rng.runifx([low [, high [, dest]]])</h3>
+
+<p>Returns random deviates from the uniform distribution between
+<code>low</code> (defaults to zero) and <code>high</code> (defaults to one)
+with 53-bit resolution.</p>
+
+<p><strong>See also</strong>: <code>stat.dunif</code></p>
+
+
+<h3>rng.rdirichlet(alpha [, dest])</h3>
+
+<p>Returns random deviates from the Dirichlet distribution with parameter
+<code>alpha</code>. <code>alpha</code> should be a real vector with positive
+entries.</p>
+
+
+<h3>rng.rbinom(n, p [, dest])</h3>
+
+<p>Returns random deviates from the binomial distribution with size
+<code>n</code> (<code>n &gt;= 0</code>) and probability <code>p</code>
+(<code>0 &lt;= p &lt;= 1</code>).</p>
+
+<p><strong>See also</strong>: <code>stat.dbinom</code></p>
+
+
+<h3>rng.rnbinom(n, p [, dest])</h3>
+
+<p>Returns random deviates from the negative binomial distribution with size
+<code>n</code> (<code>n &gt;= 0</code>) and probability <code>p</code>
+(<code>0 &lt;= p &lt;= 1</code>).</p>
+
+<p><strong>See also</strong>: <code>stat.dnbinom</code></p>
+
+
+<h3>rng.rpois(l [, dest])</h3>
+
+<p>Returns random deviates from the Poisson distribution with mean
+<code>l &gt;= 0</code>.</p>
+
+<p><strong>See also</strong>: <code>stat.dpois</code></p>
+
+
+<h3>rng.runifint([low [, high [, dest]]])</h3>
+
+<p>Returns random deviates from the discrete uniform distribution between
+<code>low</code> and <code>high</code>.</p>
+
+
+<h3>rng.sample(m [, normalized])</h3>
+
+<p>Returns a sample from 1 to <code>m:size"*"</code> with weights specified by
+the entries in the matrix <code>m</code>. If <code>normalized</code> is
+<strong>true</strong>, the entries of <code>m</code> are considered to be
+normalized, that is, it is assumed that <code>m:sum() == 1</code>.</p>
+
+<h3>rng.lsample(m [, normalized])</h3>
+
+<p>Returns a sample from 1 to <code>m:size"*"</code> with log-weights
+specified by the entries in the matrix <code>m</code>. If
+<code>normalized</code> is <strong>true</strong>, the entries of
+<code>m</code> are considered to be normalized, that is, it is assumed that
+<code>m:exp():sum() == 1</code>.</p>
+
+
+
+<h2 id="mathx">mathx</h2>
+<small>Extended math library</small>
+
+<p>This module contains C99 math functions, Bessel functions (from Netlib's AMOS
+library), and other utilitary functions. C99 math functions are listed below:</p>
+
+<ul>
+<li><code>isfinite</code>, <code>isinf</code>, <code>isnan</code>,
+<code>isnormal</code>, and <code>signbit</code> take one number argument and
+return a boolean;</li>
+<li><code>acosh</code>, <code>asinh</code>, <code>atanh</code>,
+<code>cbrt</code>, <code>erf</code>, <code>erfc</code>, <code>exp2</code>,
+<code>expm1</code>, <code>lgamma</code>, <code>log1p</code>,
+<code>log2</code>, <code>logb</code>, <code>nearbyint</code>,
+<code>rint</code>, <code>round</code>, <code>tgamma</code>, and
+<code>trunc</code> take one number argument and return a number;</li>
+<li><code>copysign</code>, <code>fdim</code>, <code>fmax</code>,
+<code>fmin</code>, <code>hypot</code>, <code>nextafter</code>, and
+<code>remainder</code> take two arguments and return a number;</li>
+<li><code>fpclassify</code> takes a number and returns a string;</li>
+<li><code>fma</code> takes three numbers and returns a number;</li>
+<li><code>scalbn</code> takes a number and an "integer" and returns a number</li>
+</ul>
+
+<p>Please refer to the man pages for details about each of these functions.</p>
+
+
+<h3>mathx.airya (z, deriv, scaling)</h3>
+
+<p>Returns the complex Airy function <em>Ai(z)</em> or its derivative if
+<code>deriv</code> is <strong>true</strong>, and a completion
+<code>status</code>. If <code>scaling</code> is <strong>true</strong>, returns
+<em>Ai(z) * exp(zeta)</em> where <em>zeta = 2 / 3 * z * sqrt(z)</em> to remove
+the exponential decay in <em>-pi / 3 &lt; arg(z) &lt; pi / 3</em> and the
+exponential growth in <em>pi / 3 &lt; abs(arg(z)) &lt; pi</em>.</p>
+
+<p>If <code>status</code> is <strong>true</strong>, the return is normal, that
+is, the computation completed without errors, underflows, or overflows;
+otherwise, <code>status</code> is an error message. If no computation is
+performed, <strong>nil</strong> is returned.</p>
+
+<p><strong>See also</strong>: <code>mathx.airyb</code></p>
+
+
+<h3>mathx.airyb (z, deriv, scaling)</h3>
+
+<p>Returns the complex Airy function <em>Bi(z)</em> or its derivative if
+<code>deriv</code> is <strong>true</strong>, and a completion
+<code>status</code>. If <code>scaling</code> is <strong>true</strong>, returns
+<em>Bi(z) * exp(-abs(real(zeta)))</em> where <em>zeta = 2 / 3 * z *
+  sqrt(z)</em>, to remove the exponential behavior in both the left and right
+half planes.</p>
+
+<p>If <code>status</code> is <strong>true</strong>, the return is normal, that
+is, the computation completed without errors, underflows, or overflows;
+otherwise, <code>status</code> is an error message. If no computation is
+performed, <strong>nil</strong> is returned.</p>
+
+<p><strong>See also</strong>: <code>mathx.airya</code></p>
+
+
+<h3>mathx.besselh(nu, z, secondkind, scaling [, n])</h3>
+
+<p>Returns a <code>n</code> member sequence of complex Hankel (Bessel)
+functions <em>CY(j) = H(m, nu + j - 1, z)</em> where <em>m = 2</em> if
+<code>secondkind</code> is <strong>true</strong> or <em>m = 1</em> otherwise,
+with nonnegative orders <em>nu + j - 1</em> for <em>j = 1, ..., n</em> and
+complex <em>z ~= 0</em> in the cut plane <em>-pi &lt; arg(z) &lt; pi</em>. The
+size of the sequence <code>n</code> defaults to 1. A completion
+<code>status</code> is also returned.</p>
+
+<p>If <code>scaling</code> is <strong>true</strong>, returns <em>CY(j) *
+  exp(-mm * z * I)</em>, where <em>mm = 3 - 2 * m</em> and <em>I</em> is the
+imaginary unit. The scaling removes the exponential behavior in both the upper
+and lower half planes.</p>
+
+<p>If <code>status</code> is <strong>true</strong>, the return is normal, that
+is, the computation completed without errors, underflows, or overflows;
+otherwise, <code>status</code> is an error message. If no computation is
+performed, <strong>nil</strong> is returned.</p>
+
+<p><strong>See also</strong>: <code>mathx.besseli</code>,
+<code>mathx.besselj</code>, <code>mathx.besselk</code>,
+<code>mathx.bessely</code>.</p>
+
+
+<h3>mathx.besseli(nu, z, scaling [, n])</h3>
+
+<p>Returns a <code>n</code> member sequence of complex modified Bessel
+functions of first kind <em>CY(j) = I(nu + j - 1, z)</em> with nonnegative
+orders <em>nu + j - 1</em> for <em>j = 1, ..., n</em> and complex
+<code>z</code> in the cut plane <em>-pi &lt; arg(z) &lt; pi</em>.
+The size of the sequence <code>n</code> defaults to 1. A completion
+<code>status</code> is also returned.</p>
+
+<p>If <code>scaling</code> is <strong>true</strong>, returns <em>CY(j) *
+  exp(-abs(real(z)))</em> to remove the exponential growth in both the left
+and right half planes.</p>
+
+<p>If <code>status</code> is <strong>true</strong>, the return is normal, that
+is, the computation completed without errors, underflows, or overflows;
+otherwise, <code>status</code> is an error message. If no computation is
+performed, <strong>nil</strong> is returned.</p>
+
+<p><strong>See also</strong>: <code>mathx.besselh</code>,
+<code>mathx.besselj</code>, <code>mathx.besselk</code>,
+<code>mathx.bessely</code>.</p>
+
+
+<h3>mathx.besselj(nu, z, scaling [, n])</h3>
+
+<p>Returns a <code>n</code> member sequence of complex Bessel functions of
+first kind <em>CY(j) = J(nu + j - 1, z)</em> with nonnegative orders <em>nu +
+  j - 1</em> for <em>j = 1, ..., n</em> and complex <code>z</code> in the cut
+plane <em>-pi &lt; arg(z) &lt; pi</em>. The size of the sequence
+<code>n</code> defaults to 1. A completion <code>status</code> is also
+returned.</p>
+
+<p>If <code>scaling</code> is <strong>true</strong>, returns <em>CY(j) *
+  exp(-abs(imag(z)))</em> to remove the exponential growth in both the lower
+and upper half planes.</p>
+
+<p>If <code>status</code> is <strong>true</strong>, the return is normal, that
+is, the computation completed without errors, underflows, or overflows;
+otherwise, <code>status</code> is an error message. If no computation is
+performed, <strong>nil</strong> is returned.</p>
+
+<p><strong>See also</strong>: <code>mathx.besselh</code>,
+<code>mathx.besseli</code>, <code>mathx.besselk</code>,
+<code>mathx.bessely</code>.</p>
+
+
+<h3>mathx.besselk(nu, z, scaling [, n])</h3>
+
+<p>Returns a <code>n</code> member sequence of complex modified Bessel
+functions of second kind <em>CY(j) = K(nu + j - 1, z)</em> with nonnegative
+orders <em>nu + j - 1</em> for <em>j = 1, ..., n</em> and complex <code>z ~=
+  0</code> in the cut plane <em>-pi &lt; arg(z) &lt; pi</em>. The size of the
+sequence <code>n</code> defaults to 1. A completion <code>status</code> is
+also returned.</p>
+
+<p>If <code>scaling</code> is <strong>true</strong>, returns <em>CY(j) *
+  exp(z)</em> to remove the exponential behavior in both the left and right
+half planes.</p> 
+
+<p>If <code>status</code> is <strong>true</strong>, the return is normal, that
+is, the computation completed without errors, underflows, or overflows;
+otherwise, <code>status</code> is an error message. If no computation is
+performed, <strong>nil</strong> is returned.</p>
+
+<p><strong>See also</strong>: <code>mathx.besselh</code>,
+<code>mathx.besseli</code>, <code>mathx.besselj</code>,
+<code>mathx.bessely</code>.</p>
+
+
+<h3>mathx.bessely(nu, z, scaling [, n])</h3>
+
+<p>Returns a <code>n</code> member sequence of complex Bessel functions of
+second kind <em>CY(j) = Y(nu + j - 1, z)</em> with nonnegative orders <em>nu +
+  j - 1</em> for <em>j = 1, ..., n</em> and complex <code>z</code> in the cut
+plane <em>-pi &lt; arg(z) &lt; pi</em>. The size of the sequence
+<code>n</code> defaults to 1. A completion <code>status</code> is also
+returned.</p>
+
+<p>If <code>scaling</code> is <strong>true</strong>, returns <em>CY(j) *
+  exp(-abs(imag(z)))</em> to remove the exponential growth in both the lower
+and upper half planes.</p>
+
+<p>If <code>status</code> is <strong>true</strong>, the return is normal, that
+is, the computation completed without errors, underflows, or overflows;
+otherwise, <code>status</code> is an error message. If no computation is
+performed, <strong>nil</strong> is returned.</p>
+
+<p><strong>See also</strong>: <code>mathx.besselh</code>,
+<code>mathx.besseli</code>, <code>mathx.besselj</code>,
+<code>mathx.besselk</code>.</p>
+
+
+<h3>mathx.feq(x1, x2 [, epsilon])</h3>
+
+<p>Approximate equal up to precision <code>epsilon</code>, based on Knuth's
+suggestion in: Knuth, D. E. (1998), "The Art of Computer Programming. Vol. 2:
+Seminumerical Algorithms", Section 4.2.2.</p>
+
+<p>Note that if <code>x1 ~== x2</code> when <code>feq(x1, x2)</code> is
+<strong>true</strong>, then similarly</p>
+
+<ul>
+<li><code>x1 ~&lt; x2</code> when <code>not feq(x1, x2) and x1 &lt; x2</code></li>
+<li><code>x1 ~&gt; x2</code> when <code>not feq(x1, x2) and x1 &gt; x2</code></li>
+<li><code>x1 ~&lt;= x2</code> when <code>feq(x1, x2) or x1 &lt; x2</code></li>
+<li><code>x1 ~&gt;= x2</code> when <code>feq(x1, x2) or x1 &gt; x2</code></li>
+</ul>
+
+
+<h3>mathx.log1pe(x)</h3>
+
+<p>Computes <code>log(1 + exp(x))</code> by avoiding calls to <code>log</code>
+and <code>exp</code> when <code>abs(x) &lt; eps</code>.</p>
+
+<h3>mathx.lse(x1, x2)</h3>
+
+<p>Computes the "soft max" of <code>x1</code> and <code>x2</code>, the log sum
+of exps <code>log(exp(x1) + exp(x2))</code>.</p>
+
+
+<h3>mathx.beta(x, y)<br />
+mathx.lbeta(x, y)</h3>
+
+<p>Computes the beta function <code>B</code> with arguments <code>x</code> and
+<code>y</code> and its logarithm (<code>beta</code> and <code>lbeta</code>
+respectively.) The beta function is defined by
+<code>B(x, y) = integral_0^1 t^(x - 1) (1 - t)^(y - 1) dt</code>, or,
+equivalently, by <code>B(x, y) = G(x) * G(y) / G(x + y)</code> where
+<code>G</code> is the gamma function.</p>
+
+<p><strong>See also</strong>: <code>mathx.gamma</code>,
+<code>mathx.lgamma</code></p>
+
+
+<h3>mathx.digamma(x)</h3>
+
+<p>Computes the digamma function, the logarithmic derivative of the gamma
+function, at <code>x</code>.</p>
+
+<p><strong>See also</strong>: <code>mathx.gamma</code></p>
+
+
+<h3>mathx.choose(n, k)<br />
+mathx.lchoose(n, k)</h3>
+
+<p>Compute binomial coefficients and their logarithms (<code>choose</code> and
+<code>lchoose</code> respectively`.)</p>
+
+
+<!-- FIXME: installation and download (git) -->
+
+<h3>License</h3>
+<p>Copyright (c) 2011 Luis Carvalho</p>
+
+<p>Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation files
+(the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify,
+merge, publish, distribute, sublicense, and/or sell copies of the
+Software, and to permit persons to whom the Software is furnished
+to do so, subject to the following conditions:</p>
+
+<p>The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.</p>
+
+<p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.</p>
+
+</div><!-- end content -->
+
+<div id="footer">
+<p>
+<a href="http://gforge.org/">
+  <img alt="Powered by GForge" src="http://gforge.org/images/pow-gforge.png" />
+</a>
+<br />
+<a href="http://validator.w3.org/check/referer">Valid XHTML 1.1</a>
+&nbsp; :: &nbsp;
+<a href="http://jigsaw.w3.org/css-validator/check/referer">Valid CSS</a>
+</p>
+</div>
+
+</div><!-- end page -->
+</body>
+</html>
+
+<!-- vi:set sw=2 ts=2 noai: -->

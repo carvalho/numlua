@@ -1,0 +1,14 @@
+Help [=[
+
+matrix.slice(m [, first] [, last] [, step])
+-------------------------------------------
+
+Returns a _section_ of matrix `m` that is a slice in the first dimension of
+`m` starting at `first` (defaults to 1), ending at `last` (defaults to
+`#m`), and alternating by `step` (defaults to 1) positions. The returned
+section is a _reference_ to `m`.
+
+A shortcut for `matrix.slice(m, first, last, step)` is `m(first, last, step)`.
+
+__See also__: `matrix.section`
+]=]

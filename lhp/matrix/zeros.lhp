@@ -1,0 +1,12 @@
+Help [=[
+
+matrix.new(d1, d2, ... [, iscomplex])
+matrix.zeros(d1, d2, ... [, iscomplex])
+matrix.ones(d1, d2, ... [, iscomplex])
+--------------------------------------
+
+Returns a matrix with dimensions `d1`, `d2`, and so on. If last argument
+`iscomplex` is **true**, the returned matrix is _complex_. The entries are
+_arbitrary_ (not initialized) when using `new`, initialized to zero when
+using `zeros`, and initialized to one when using `ones`.
+]=]

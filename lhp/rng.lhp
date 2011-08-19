@@ -1,0 +1,44 @@
+Help [=[
+
+rng
+===
+
+The `rng` module provides _random number generators_ based on the
+Mersenne-Twister generator and netlib's `ranlib`. Objects can be created with
+`rng.new`, copied with `rng.copy`, and have their seed set with `rng.seed`.
+
+The following methods sample deviates from a number of probability
+distributions or elements in a matrix object:
+
+          rbeta    rchisq    rexp          rf  rgamma    rnorm
+        rmvnorm     runif  runifx  rdirichlet  rbinom  rnbinom
+          rpois  runifint  sample     lsample
+
+Each one of these methods are closed on a `rng` object and each object `r` has
+a (uservalue) table containing its methods, that is, methods for which `r` is
+an upvalue. To retrieve the method table for `r`, use `#r`. For convenience, a
+"class" `rng` object `c` is always created and has its methods stored in the
+class table so that `rng.f` is `(#c).f`.
+
+All random deviate methods accept an optional last parameter `v` that must be
+a _real_ matrix that serves as destination: if `v` is provided, `v:size()`
+deviates are generated and stored in-place at `v`.
+
+Examples:
+
+        > n = 5
+        > for i = 1, n do print(i, rng.rnorm()) end
+        1       -0.83608755044204
+        2       0.30498104946162
+        3       -1.227283848856
+        4       -0.91148894025705
+        5       0.28245551259444
+        > r = rng.new()
+        > v = (#r).rnorm(0, 1, matrix.new(n))
+        > for i = 1, n do print(i, v[i]) end
+        1       -0.83608755044204
+        2       0.30498104946162
+        3       -1.227283848856
+        4       -0.91148894025705
+        5       0.28245551259444
+]=]

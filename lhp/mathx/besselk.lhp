@@ -1,0 +1,21 @@
+Help [=[
+
+mathx.besselk(nu, z, scaling [, n])
+-----------------------------------
+
+Returns a `n` member sequence of complex modified Bessel functions of
+second kind _CY(j) = K(nu + j - 1, z)_ with nonnegative orders _nu + j - 1_
+for _j = 1, ..., n_ and complex `z ~= 0` in the cut plane
+_-pi < arg(z) < pi_. The size of the sequence `n` defaults to 1.
+A completion `status` is also returned.
+
+If `scaling` is **true**, returns _CY(j) * exp(z)_ to remove
+the exponential behavior in both the left and right half planes.
+
+If `status` is **true**, the return is normal, that is, the computation
+completed without errors, underflows, or overflows; otherwise, `status` is
+an error message. If no computation is performed, **nil** is returned.
+
+__See also__: `mathx.besselh`, `mathx.besseli`, `mathx.besselj`,
+               `mathx.bessely`.
+]=]

@@ -1,0 +1,9 @@
+Help [=[
+
+fft.wisdom([wisdom])
+--------------------
+
+Provides an interface for FFTW wisdoms. If `wisdom` is **nil**, returns the
+currently accumulated wisdom; if `wisdom` is **true**, forgets accumulated
+wisdom; if `wisdom` is a string, imports wisdom from it.
+]=]

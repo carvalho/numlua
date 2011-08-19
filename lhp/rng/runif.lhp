@@ -1,0 +1,10 @@
+Help [=[
+
+rng.runif([low [, high [, dest]]])
+----------------------------------
+
+Returns random deviates from the uniform distribution between `low` (defaults
+to zero) and `high` (defaults to one).
+
+__See also__: `stat.dunif`
+]=]

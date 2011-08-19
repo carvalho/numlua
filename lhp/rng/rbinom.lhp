@@ -1,0 +1,10 @@
+Help [=[
+
+rng.rbinom(n, p [, dest])
+-------------------------
+
+Returns random deviates from the binomial distribution with size `n`
+(`n >= 0`) and probability `p` (`0 <= p <= 1`).
+
+__See also__: `stat.dbinom`
+]=]

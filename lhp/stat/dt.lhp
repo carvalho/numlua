@@ -1,0 +1,11 @@
+Help [=[
+
+stat.dt(x, df)
+stat.pt(x, df)
+stat.qt(p, df)
+--------------
+
+Computes the density (`dt`), cumulative distribution function (`pt`), and
+inverse cdf (`qt`) for the *Student t* distribution with `df >= 0` degrees of
+freedom.
+]=]

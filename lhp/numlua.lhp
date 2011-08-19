@@ -1,0 +1,27 @@
+Help [=[
+
+Numeric Lua
+===========
+
+_Numeric Lua_ is a numerical package for the Lua programming language. It
+includes support for complex numbers, multidimensional matrices, random number
+generation, fast Fourier transforms, and special functions. Most of the
+routines are simple wrappers for well known numerical libraries: complex
+numbers and part of the extended math modules come from C99; other special
+functions, including statistical functions, are adapted from Netlib's SLATEC
+and DCDFLIB; random number generation is based on Takuji Nishimura and Makoto
+Matsumoto's Mersenne Twister generator as the "engine" (uniform deviates) and
+Netlib's RANLIB for the remaining deviates; fast Fourier transforms are
+implemented from FFTW; and the matrix package draws most of its numeric
+intensive routines from Netlib's ubiquitous BLAS and LAPACK packages.
+
+Numeric Lua tries to maintain Lua's minimalist approach by providing bare-bone
+wrappers to the numerical routines. The user can use the outputs for further
+computations and is then fully responsible for the results. Other Lua features
+are also available, such as OO simulation through metamethods and functional
+facilities. A basic API is provided in order to promote extensibility. Also,
+check `numlua.seeall` for a quick way to start using Numeric Lua.
+
+Numeric Lua is licensed under the same license as Lua -- the MIT license --
+and so can be freely used for academic and commercial purposes.
+]=]

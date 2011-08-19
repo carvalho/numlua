@@ -1,0 +1,11 @@
+Help [=[
+
+matrix.reshape(m, d1, d2, ..., dn)
+----------------------------------
+
+Returns a _reference_ to `m` that has dimensions `d1`, `d2`, `...`, `dn`. The
+new dimensions need to be consistent, that is, `d1 * d2 * ... * dn ==
+m:size"*"`.
+
+__See also__: `matrix.size`
+]=]

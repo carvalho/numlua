@@ -1,0 +1,26 @@
+Help [=[
+
+fft
+===
+
+The `fft` module implements fast Fourier transforms. The simple interface to
+FFTs comprehends just `matrix.fft` and `matrix.fct` which operate directly on
+a matrix. If, however, you intend to execute the same transform many times it
+might be more efficient to use a _plan_, so check `fft.plan`. If more control
+on how plans are executed is needed, there is also an interface to the
+_wisdom_ of FFTW in `fft.wisdom`.
+
+Example:
+
+        > a = matrix({{1, 2, 3}, {0, -1, -4}}, true)
+        > b = matrix(a:shape(1, true))
+        > p = fft.plan(b, false, fft.flag["measure"]) -- direct transform
+        > ip = fft.plan(b, true, fft.flag["measure"]) -- inverse transform
+        > b._ = a
+        > p(); print(b:pretty()) -- execute direct
+                          1+0i    1-1.7320508075689i    1+1.7320508075689i
+                         11+0i   -4+3.4641016151378i   -4-3.4641016151378i
+        > ip(); print(b:pretty()) -- execute inverse
+            1+0i    2+0i    3+0i
+            0+0i   -1+0i   -4+0i
+]=]

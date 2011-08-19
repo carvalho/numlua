@@ -1,0 +1,17 @@
+Help [=[
+
+mathx.airya (z, deriv, scaling)
+-------------------------------
+
+Returns the complex Airy function _Ai(z)_ or its derivative if `deriv` is
+**true**, and a completion `status`. If `scaling` is **true**, returns
+_Ai(z) * exp(zeta)_ where _zeta = 2 / 3 * z * sqrt(z)_ to remove the
+exponential decay in _-pi / 3 < arg(z) < pi / 3_ and the exponential growth
+in _pi / 3 < abs(arg(z)) < pi_.
+
+If `status` is **true**, the return is normal, that is, the computation
+completed without errors, underflows, or overflows; otherwise, `status` is
+an error message. If no computation is performed, **nil** is returned.
+
+__See also__: `mathx.airyb`
+]=]

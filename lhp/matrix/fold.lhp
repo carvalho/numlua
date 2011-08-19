@@ -1,0 +1,12 @@
+Help [=[
+
+matrix.fold(m, f [, init])
+--------------------------
+
+Computes the _left_ fold of function `f` over the entries in `m` in
+element-order, that is, returns
+
+        f(...f(f(init, m[1]), m[2])..., m[n])
+
+__See also__: `matrix.sum`
+]=]

@@ -1,0 +1,7 @@
+Help [=[
+
+matrix.swap (a, b)
+------------------
+
+Swaps the contents of conformable vectors `a` and `b`.
+]=]

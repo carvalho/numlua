@@ -1,0 +1,31 @@
+Help [=[
+
+matrix.ifelse(m, cond, x [, y])
+-------------------------------
+
+Sets the entries in `m` that satisfy `cond` to `x` and, if `y` is specified,
+the entries in `m` that do not satisfy `cond` to `y`. Parameters `x` and `y`
+can be numbers or conformable matrices to `m`.
+
+Examples:
+
+        -- note that matrix.which(m, cond, "#") is preferred
+        function count (m, cond)
+          return matrix.sum(matrix.ifelse(m:copy(), cond, 1, 0))
+        end
+
+        -- mask has ones for true and zeros for false
+        function merge (x, y, mask)
+          return matrix.ifelse(mask:copy(), 1, x, y)
+        end
+
+        local lt = function (x, y) return x < y and 1 or 0 end
+        function min (x, y)
+          return ifelse(matrix.map(x:copy(), y, lt), 1, x, y)
+        end
+        function max (x, y)
+          return ifelse(matrix.map(x:copy(), y, lt), 0, x, y)
+        end
+
+__See also__: `matrix.which`
+]=]

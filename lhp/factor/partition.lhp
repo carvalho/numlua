@@ -1,0 +1,22 @@
+Help [=[
+
+factor.partition(f, m)
+----------------------
+
+Partitions the matrix `m` according to the levels in `f` by returning a table
+`t` such that `t[l]` is a vector containing the entries `i1, ..., in` in `m`
+such that `f(i1) = ... = f(in) = l`.
+
+Example:
+
+        > f = stat.factor{"a", "c", "a", "a", "b", "c"}
+        > x = matrix.linspace(1, (#f):sum())
+        > vprint = function(v) return table.concat(v:totable(), ", ") end
+        > for l, v in ipairs(f:partition(x)) do print(l, vprint(v)) end
+        1       1, 3, 4
+        2       2, 6
+        3       5
+
+
+__See also__: `stat.factor`, `factor.fold`
+]=]

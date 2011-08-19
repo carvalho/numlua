@@ -1,0 +1,16 @@
+Help [=[
+
+mathx.feq(x1, x2 [, epsilon])
+-----------------------------
+
+Approximate equal up to precision `epsilon`, based on Knuth's suggestion
+in: Knuth, D. E. (1998), "The Art of Computer Programming. Vol. 2:
+Seminumerical Algorithms", Section 4.2.2.
+
+Note that if `x1 ~== x2` when `feq(x1, x2)` is **true**, then similarly
+
+  * `x1 ~< x2` when `not feq(x1, x2) and x1 < x2`
+  * `x1 ~> x2` when `not feq(x1, x2) and x1 > x2`
+  * `x1 ~<= x2` when `feq(x1, x2) or x1 < x2`
+  * `x1 ~>= x2` when `feq(x1, x2) or x1 > x2`
+]=]

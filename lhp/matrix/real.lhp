@@ -1,0 +1,10 @@
+Help [=[
+
+matrix.real(a)
+--------------
+
+Returns a _real_ matrix that references the _real_ part of `a` if `a` is
+complex or returns `a` itself if `a` is real.
+
+__See also__: `matrix.imag`, `matrix.complex`
+]=]

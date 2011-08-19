@@ -1,0 +1,48 @@
+Help [=[
+
+matrix.eig(A [, what [, hermitian]])
+------------------------------------
+
+Computes the eigenvalues of `A`, and optionally the eigenvectors according
+to parameter `what`:
+
+  * `what == "n"` or `what == "N"`: do not compute the eigenvectors of `A`,
+    just return the eigenvalues of `A` (in a vector);
+  * `what == "l"` or `what == "L"`: returns the eigenvalues (in a vector) and
+    the left eigenvectors of `A` (in a matrix);
+  * `what == "r"` or `what == "R"`: the default option, returns the
+    eigenvalues (in a vector) and the right eigenvectors of `A` (in a
+    matrix);
+  * `what == "a"` or `what == "A"`: returns the eigenvalues and both left and
+    right eigenvectors of `A`.
+
+Note that the right eigenvectors of `A` are the left eigenvalues of `A^H` and
+vice-versa. If `hermitian` is **true**, `A` is assumed to be Hermitian and
+only its upper triangle is accessed. 
+
+When computing the eigenvalues -- and optionally eigenvectors -- of `A`, the
+matrix is _balanced_ to improve accuracy; see `matrix.balance` for a
+description of the operations. There is currently no way of preventing
+balancing.
+
+Examples:
+
+        -- condition number
+        function cond (m)
+          local x = zeros(#m, #m):hemul(m) -- x = m * t(m)
+          local e = eig(x, "n", true) -- sqrt(e) are singular values of m
+          return math.sqrt(math.abs(max(e) / min(e)))
+        end
+
+        -- if F[n] is the n-th Fibonacci number,
+        -- {{F[n-1], F[n]}, {F[n], F[n+1]}} = {{0, 1}, {1, 1}} ^ n
+        local s, V = eig(matrix{{0, 1}, {1, 1}}, "r", true)
+        local v = V[1] * V[2] -- element-wise multiplication
+        local w = zeros(2) -- workspace
+        function fib (n)
+          w._ = s; w:pow(n, true) -- w = s ^ n, in-place
+          return dot(v, w) -- V * diag(s ^ n) * t(V)
+        end
+
+__See also__: `matrix.balance`, `matrix.svd`
+]=]

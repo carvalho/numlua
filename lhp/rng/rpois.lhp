@@ -1,0 +1,9 @@
+Help [=[
+
+rng.rpois(l [, dest])
+---------------------
+
+Returns random deviates from the Poisson distribution with mean `l >= 0`.
+
+__See also__: `stat.dpois`
+]=]

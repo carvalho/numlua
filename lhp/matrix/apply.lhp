@@ -1,0 +1,26 @@
+Help [=[
+
+matrix.apply(m, f [, eorder])
+-----------------------------
+
+Applies a function `f` to each entry in `m` _in-place_, that is, sets
+`m[i1,...,in] = f(i1, ..., in, m[i1, ..., in])` where `i1, ..., in` are
+indices in `m` (`m` has dimension `n`). If `eorder` is **true**, `f` takes
+indices in element-order. If `f` does not return a numeric value, `m` is
+not changed for the called index.
+
+Examples:
+
+        local h = function (i, j) return 1 / (i + j - 1) end
+        function hilbert (n)
+          return matrix.new(n, n):apply(h)
+        end
+
+        local circ = function (v, n)
+          return function (i, j) return v[(j - i) % n + 1] end
+        end
+        function circulant (v)
+          local n = #v
+          return matrix.new(n, n):apply(circ(v, n))
+        end
+]=]

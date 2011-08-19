@@ -1,0 +1,10 @@
+Help [=[
+
+rng.rgamma(a [, s [, dest]])
+----------------------------
+
+Returns random deviates from the gamma distribution with shape `a` and
+optional rate `s`.
+
+__See also__: `stat.dgamma`
+]=]

@@ -1,0 +1,10 @@
+Help [=[
+
+rng.new([seed])
+---------------
+
+Returns a new rng object `r` with seed `seed`. To obtain a table with
+methods that use `r`, call `#r`.
+
+__See also__: `rng`, `rng.seed`
+]=]

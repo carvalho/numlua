@@ -1,0 +1,24 @@
+Help [=[
+
+numlua.seeall
+-------------
+
+A `require` call to `numlua.seeall` loads most of the functions in Numlua to
+the global table to make it easier to prototype and test code or even just use
+Numlua is a flexible computational shell. In particular, `numlua.seeall` does
+the following:
+
+  * Loads the `help` module, if installed.
+  * Sets _all_ methods in Numlua to the global table; a prefix is appended to
+    a method if it exists in more than one class table or in the global table
+    to avoid conflicts. The order in which the methods are "registered" and
+    their prefixes are: `"x"` for `math` (regular lua module) and `mathx`,
+    `"c"` for `complex`, `"m"` for `matrix`, `"s"` for `stat`, and `"r"` for
+    `rng`.
+  * Mathematical functions that are defined on numbers, complex numbers, and
+    matrices -- `abs`, `exp`, and so on -- are shadowed by functions that call
+    a particular method based on its argument. For example, `exp(x)` calls
+    `math.exp(x)` if `x` is a number, `complex.exp(x)` (or `cexp(x)`) if `x`
+    is complex, and `matrix.exp(x)` (or `mexp(x)`) if `x` is a matrix.
+  * `type` is overridden with `numlua.type` and `opmode` is `numlua.opmode`.
+]=]

@@ -1,0 +1,32 @@
+Help [=[
+
+matrix.which(m [, cond [, what]])
+---------------------------------
+
+Returns entries in `m` that satisfy `cond` depending on `what`:
+
+  * `what = "k"`: returns a vector of element-order indices in `m` whose
+    respective entries satisfy `cond` or **nil** otherwise;
+  * `what = "v"`: returns a vector containing the entries in `m` that
+    satisfy `cond` or **nil** otherwise;
+  * `what = "#"`: returns only the number of entries that safisty `cond`.
+
+Parameter `what` defaults to `"k"`.
+
+Examples:
+
+        -- simple alias
+        function count (m, cond)
+          return matrix.which(m, cond, "#")
+        end
+
+        -- mask has ones for true and zeros for false
+        function pack (m, mask)
+          return matrix.which(m, mask, "v")
+        end
+        function unpack (v, mask, m)
+          return matrix.set(m, matrix.which(m, mask), v)
+        end
+
+__See also__: `matrix.ifelse`
+]=]

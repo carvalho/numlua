@@ -1,0 +1,7 @@
+Help [=[
+
+matrix.save(m, filename)
+------------------------
+
+Saves matrix `m` in HDF5 file `filename`.
+]=]

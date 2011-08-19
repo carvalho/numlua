@@ -1,0 +1,21 @@
+Help [=[
+
+matrix.sort (m [, decreasing [, returnindex]])
+----------------------------------------------
+
+Sorts `m` _in-place_. If `decreasing` is **true**, sorts in decreasing order.
+If `returnindex` is **true** returns `index` such that `m[i]` was
+`m[index[i]]` before sorting, where `i` is in element-order; otherwise,
+returns `m`.
+
+As in `matrix.min` and `matrix.max`, complex numbers are compared based on
+their real parts, and their imaginary parts are only used to break ties.
+
+Example:
+
+        iv = matrix.sort(v, false, true) -- increasing, return index
+        x = matrix.new(matrix.shape(v, 1, true))
+        x[iv] = v -- restore v
+
+__See also__: `matrix.min`, `matrix.max`
+]=]

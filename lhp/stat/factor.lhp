@@ -1,0 +1,32 @@
+Help [=[
+
+stat.factor(t)
+--------------
+
+Constructs a _factor_ based on table `t`, a *sequence*. A factor is a more
+compact representation of `t` where each distinct entry -- a *level* -- is
+assigned an integer key, the *key level*. If `f` is a factor built from `t`,
+`f[i]` returns `t[i]`, `f(i)` returns the key level of `t[i]`, and `f()`
+returns the levels of `f` as a table; in particular, `f[i]` is equivalent to
+`f()[f(i)]`. The expression `#f` returns a vector with level counts, that is,
+`(#f)[l]` returns the number of entries in `t` with key level `l` and thus
+values `f()[l]`; note that `(#f):sum()` is `#t`.
+
+Example:
+
+        > f = stat.factor{"a", "c", "a", "a", "b", "c"}
+        > for l, level in ipairs(f()) do print(l, level, (#f)[l]) end
+        1       a       3
+        2       c       2
+        3       b       1
+        > for i = 1, (#f):sum() do print(i, f[i], f(i)) end
+        1       a       1
+        2       c       2
+        3       a       1
+        4       a       1
+        5       b       3
+        6       c       2
+
+
+__See also__: `factor.fold`, `factor.partition`, `factor.design`
+]=]

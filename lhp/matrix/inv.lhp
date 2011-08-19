@@ -1,0 +1,46 @@
+Help [=[
+
+matrix.inv(A [, what [, inplace [, norcond]]])
+----------------------------------------------
+
+Returns the inverse of square matrix `A` and an estimate of the reciprocal of
+its condition number, according to parameter `what`:
+
+  * `what == "d"` or `what == "D"`, assumes that `A` is a diagonal matrix;
+  * `what == "l"` or `what == "L"`, assumes that `A` is a lower triangular
+    matrix, if `what == "u"` or `what == "U"`, assumes `A` is an upper
+    triangular matrix;
+  * `what == "p"` or `what == "P"`, assumes that `A` is a Hermitian
+    positive-definite matrix;
+  * `what == "g"` or `what == "G"`, the default value, assumes that `A` is a
+    general matrix.
+
+If `inplace` is **true** and `what` codes for `A` as being Hermitian
+positive-definite or general, `A` is overwritten with either a Cholesky
+or LU decomposition respectively.
+
+If `norcond` is **true**, the reciprocal of the condition number is not
+estimated.
+
+Example:
+
+        -- Square-root of a matrix A by Denman-Beavers algorithm
+        function dbsqrtm (A, tol, maxiters)
+          local opmode = numlua.opmode(true) -- set in-place operations
+          local iY, iZ = zeros(A:shape()), zeros(A:shape()) -- buffers
+          local s, n = inf, 1 -- norm(Y), #iterations
+          local Y, Z = copy(A), eye(#A) -- initialize
+          while true do
+            iY._, iZ._ = Y, Z
+            Y, Z = (Y + inv(iZ)) / 2, (Z + inv(iY)) / 2 -- in-place
+            -- check termination:
+            local f = norm(Y)
+            if abs(f - s) <= tol or n > maxiters then break end
+            s, n = f, n + 1
+          end
+          numlua.opmode(opmode) -- restore previous mode
+          return Y, Z, s
+        end
+
+__See also__: `matrix.rcond`
+]=]

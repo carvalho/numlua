@@ -1,0 +1,10 @@
+Help [=[
+
+rng.rnorm([m [, sd [, dest]]])
+------------------------------
+
+Returns random deviates from the normal distribution with mean `m` (defaults
+to zero) and standard deviation `sd` (`sd > 0`, defaults to one).
+
+__See also__: `stat.dnorm`, `rng.rmvnorm`
+]=]

@@ -1,0 +1,10 @@
+Help [=[
+
+matrix.shape(m [, index [, complex]])
+-------------------------------------
+
+Returns the dimensions of `m` starting at dimension `index` (defaults to 1)
+and if `m` is complex when `complex` is **true**.
+
+__See also__: `matrix.size`
+]=]

@@ -1,0 +1,23 @@
+Help [=[
+
+matrix.rcond(A [, what [, inplace]])
+------------------------------------
+
+Estimates the reciprocal of the condition number of matrix `A` in 1-norm,
+depending on parameter `what`:
+
+  * `what == "d"` or `what == "D"`, assumes that `A` is a diagonal matrix;
+  * `what == "l"` or `what == "L"`, assumes that `A` is a lower triangular
+    matrix, if `what == "u"` or `what == "U"`, assumes `A` is an upper
+    triangular matrix;
+  * `what == "p"` or `what == "P"`, assumes that `A` is a Hermitian
+    positive-definite matrix;
+  * `what == "g"` or `what == "G"`, the default value, assumes that `A` is a
+    general matrix.
+
+If `inplace` is **true** and `what` codes for `A` as being Hermitian
+positive-definite or general, `A` is overwritten with either a Cholesky
+or LU decomposition respectively.
+
+__See also__: `matrix.svd`, `matrix.inv`
+]=]

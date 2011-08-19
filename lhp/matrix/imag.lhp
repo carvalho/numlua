@@ -1,0 +1,10 @@
+Help [=[
+
+matrix.imag(a)
+--------------
+
+Returns a _real_ matrix that references the _imaginary_ part of `a` if `a` is
+complex or returns `matrix.zeros(a:shape())` if `a` is real.
+
+__See also__: `matrix.real`, `matrix.complex`
+]=]

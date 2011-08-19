@@ -1,0 +1,21 @@
+Help [=[
+
+mathx
+=====
+
+This module contains C99 math functions, Bessel functions (from Netlib's AMOS
+library), and other utilitary functions. C99 math functions are listed below:
+
+  * `isfinite`, `isinf`, `isnan`, `isnormal`, and `signbit` take one number
+    argument and return a boolean;
+  * `acosh`, `asinh`, `atanh`, `cbrt`, `erf`, `erfc`, `exp2`, `expm1`,
+    `lgamma`, `log1p`, `log2`, `logb`, `nearbyint`, `rint`, `round`,
+    `tgamma`, and `trunc` take one number argument and return a number;
+  * `copysign`, `fdim`, `fmax`, `fmin`, `hypot`, `nextafter`, and `remainder`
+    take two arguments and return a number;
+  * `fpclassify` takes a number and returns a string;
+  * `fma` takes three numbers and returns a number;
+  * `scalbn` takes a number and an "integer" and returns a number
+
+Please refer to the man pages for details about each of these functions.
+]=]

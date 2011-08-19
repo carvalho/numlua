@@ -1,0 +1,32 @@
+Help [=[
+
+matrix.hemul (C, A, [, inner, [, what [, alpha]]])
+--------------------------------------------------
+
+Given a Hermitian matrix `C`, performs the Hermitian update `C = C + alpha *
+A^H * A` if `inner` is **true**, or `C = C + alpha * A * A^H` otherwise. The
+default value for `alpha` is 1.
+
+Parameter `what` specifies how `C` is to be updated; if `what == "l"` or
+`what == "L"`, only the lower triangle of `C` is updated; if `what == "u"` or
+`what == "U"`, only the upper triangle of `C` is updated; if `what == "f"` or
+`what == "F"`, the lower triangle of `C` is updated by the multiplication and
+reflected to the strict upper triangle. The default value for `what` is "F".
+
+Example:
+
+        -- generates Wishart deviates
+        function wishart (S, n)
+          local m = #S
+          local L = assert(chol(S, "L")) -- Cholesky factor: S = L * L^T
+          local c = zeros(m) -- cache
+          return function ()
+            local w = zeros(m, m)
+            for i = 1, n - 1 do
+              c = trmul(rnorm(0, 1, c), L) -- c ~ N(0, S)
+              w = hemul(w, c, false, "L") -- w = w + c * c^T
+            end
+            return hemul(w, trmul(rnorm(0, 1, c), L)) -- n-th run: full hemul
+          end
+        end
+]=]

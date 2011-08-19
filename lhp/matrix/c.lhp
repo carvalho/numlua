@@ -1,0 +1,7 @@
+Help [=[
+
+matrix.c(v1, ..., vn)
+---------------------
+
+Concatenates vectors or numbers `v1`, `...`, `vn` into a new vector.
+]=]

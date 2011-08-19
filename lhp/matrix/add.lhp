@@ -1,0 +1,13 @@
+Help [=[
+
+matrix.add(a, b [, s [, inplace]])
+----------------------------------
+
+Adds `s * b` to `a`, where `s` defaults to 1. If `b` is a number `s` is
+ignored and sets `a[i] = a[i] + real(b)` if `a` is real, or
+`a[i] = a[i] + b` if `a` is complex; otherwise, sets
+`a[i] = a[i] + b[i] * s` if `b` is a conformable matrix.
+In particular, `matrix.add(a, b, -1)` subtracts `b` from `a`.
+
+If `inplace` is **true**, `a` is updated _in-place_.
+]=]

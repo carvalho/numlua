@@ -1,77 +1,79 @@
+/* {=================================================================
+ *
+ * numlua.c
+ * Numeric Lua (base routines)
+ * Luis Carvalho (lexcarvalho@gmail.com)
+ * See Copyright Notice in numlua.h
+ *
+ * ==================================================================} */
+
 #include <lua.h>
 #include <lauxlib.h>
 #include "numlua.h"
 
-/* =======   API   ======= */
 
-NUMLUA_API int nl_isloaded (lua_State *L, const char *name) {
-  lua_getfield(L, LUA_REGISTRYINDEX, "_LOADED");
-  lua_getfield(L, -1, name);
-  lua_replace(L, -2);
-  return (lua_type(L, -1) == LUA_TTABLE);
+/* {=====================================================================
+ *    API
+ * ======================================================================} */
+
+NUMLUA_API int nl_typeerror (lua_State *L, int narg, const char *tname) {
+  const char *msg = lua_pushfstring(L, "%s expected, got %s",
+      tname, luaL_typename(L, narg));
+  return luaL_argerror(L, narg, msg);
 }
 
-/* returns 1 if lname is already loaded */
-NUMLUA_API int nl_requiredeps (lua_State *L, const char *lname,
-    const luaL_Reg *dep) {
-  if (lname != NULL && nl_isloaded(L, lname)) return 1;
-  if (dep == NULL) return 0;
-  for (; dep->name; dep++) {
-    lua_pushcfunction(L, dep->func);
-    lua_pushstring(L, dep->name);
-    if (lua_pcall(L, 1, 0, 0))
-      luaL_error(L, "error loading module `%s': %s",
-          dep->name, lua_tostring(L, -1));
+#if LUA_VERSION_NUM <= 501
+/* adapted from Lua 5.2's lauxlib.c */
+NUMLUA_API void nl_require (lua_State *L, const char *modname,
+    lua_CFunction openf, int glb) {
+  lua_pushcfunction(L, openf);
+  lua_pushstring(L, modname);
+  lua_call(L, 1, 1); /* open module */
+  luaL_findtable(L, LUA_REGISTRYINDEX, "_LOADED", 1);
+  lua_pushvalue(L, -2);
+  lua_setfield(L, -2, modname); /* _LOADED[modname] = module */
+  lua_pop(L, 1); /* _LOADED table */
+  if (glb) {
+    lua_pushvalue(L, -1); /* module */
+    lua_setfield(L, LUA_GLOBALSINDEX, modname); /* _G[modname] = module */
   }
-  return 0;
 }
-
-/* assumes there is table and upvalues on top of stack */
-NUMLUA_API void nl_register (lua_State *L, const luaL_Reg *l, int nup) {
-  if (l == NULL) return;  /* nothing to register? */
-  for (; l->name; l++) {  /* else fill the table with given functions */
-    int i;
-    for (i=0; i<nup; i++) /* copy upvalues to the top */
-      lua_pushvalue(L, -nup);
-    lua_pushcclosure(L, l->func, nup);
-    lua_setfield(L, -(nup+2), l->name);
-  }
-  lua_pop(L, nup); /* remove upvalues */
-}
+#endif
 
 /* Numeric buffer */
-static int nbuffer_ = 0;
-#define NBUFFER ((void *)&nbuffer_)
-static int nbuffer_mt_ = 0;
-#define NBUFFER_MT ((void *)&nbuffer_mt_)
+static int nl_buffer_ = 0;
+#define NL_BUFFER ((void *)&nl_buffer_)
+static int nl_buffer_mt_ = 0;
+#define NL_BUFFER_MT ((void *)&nl_buffer_mt_)
 
-static nBuffer *nbuffer_new (lua_State *L, int size) {
-  nBuffer *nb = (nBuffer *) lua_newuserdata(L, sizeof(nBuffer)
+static nl_Buffer *nbuffer_new (lua_State *L, int size) {
+  nl_Buffer *nb = (nl_Buffer *) lua_newuserdata(L, sizeof(nl_Buffer)
       + size * sizeof(buf_Number));
   nb->size = size;
   nb->busy = 0; /* free */
   return nb;
 }
 
-NUMLUA_API nBuffer *nl_getbuffer (lua_State *L, int size) {
-  nBuffer *nb = NULL;
+NUMLUA_API nl_Buffer *nl_getbuffer (lua_State *L, int size) {
+  nl_Buffer *nb = NULL;
   int found = 0;
   int i, n;
-  lua_pushlightuserdata(L, NBUFFER);
+  lua_pushlightuserdata(L, NL_BUFFER);
   lua_rawget(L, LUA_REGISTRYINDEX); /* buffer table */
-  n = (int) lua_objlen(L, -1);
-  /* search best nBuffer:
+  n = (int) lua_rawlen(L, -1);
+  /* search best nl_Buffer:
    * either max size or the first one s.t. b->size >= size */
   for (i = 1; i <= n && !found; i++) {
-    nBuffer *curr_nb;
+    nl_Buffer *curr_nb;
     lua_rawgeti(L, -1, i);
-    curr_nb = (nBuffer *) lua_touserdata(L, -1);
+    curr_nb = (nl_Buffer *) lua_touserdata(L, -1);
     if (!curr_nb->busy) {
       if (curr_nb->size >= size) { /* found */
         nb = curr_nb;
         found = 1;
       }
-      else if (!nb || curr_nb->size > nb->size) nb = curr_nb;
+      else if (!nb || curr_nb->size > nb->size)
+        nb = curr_nb;
     }
     lua_pop(L, 1);
   }
@@ -85,46 +87,41 @@ NUMLUA_API nBuffer *nl_getbuffer (lua_State *L, int size) {
 }
 
 NUMLUA_API void nl_getbuffertable (lua_State *L) {
-  lua_pushlightuserdata(L, NBUFFER);
+  lua_pushlightuserdata(L, NL_BUFFER);
   lua_rawget(L, LUA_REGISTRYINDEX);
 }
 
 NUMLUA_API int nl_releasebuffer (lua_State *L, int thold) {
   int i, l, n = 0;
-  lua_pushlightuserdata(L, NBUFFER);
+  lua_pushlightuserdata(L, NL_BUFFER);
   lua_rawget(L, LUA_REGISTRYINDEX); /* buffer table */
-  l = luaL_getn(L, -1);
+  l = lua_rawlen(L, -1);
   lua_createtable(L, l, 0); /* store at most l buffers */
-  lua_pushlightuserdata(L, NBUFFER_MT);
+  lua_pushlightuserdata(L, NL_BUFFER_MT);
   lua_rawget(L, LUA_REGISTRYINDEX); /* weak-valued MT */
   lua_setmetatable(L, -2); /* weak-valued MT */
   for (i = 1; i <= l; i++) {
-    nBuffer *nb;
+    nl_Buffer *nb;
     lua_rawgeti(L, -2, i);
-    nb = (nBuffer *) lua_touserdata(L, -1);
+    nb = (nl_Buffer *) lua_touserdata(L, -1);
     if (nb->busy || nb->size < thold)
       lua_rawseti(L, -2, ++n);
     else lua_pop(L, 1);
   }
-  lua_pushlightuserdata(L, NBUFFER);
+  lua_pushlightuserdata(L, NL_BUFFER);
   lua_insert(L, -2);
-  lua_rawset(L, LUA_REGISTRYINDEX); /* reg[NBUFFER] = new buffer table */
+  lua_rawset(L, LUA_REGISTRYINDEX); /* reg[NL_BUFFER] = new buffer table */
   lua_pop(L, 1); /* old buffer table */
   return l - n; /* #released buffers */
 }
 
 
-/* =======   Interface   ======= */
+/* {=====================================================================
+ *    Interface
+ * ======================================================================} */
 
-/*
- * numlua.buffer(opt [, arg])
- *   o "release": release all buffers with size at least @arg. @arg defaults
- *      to 0.
- *   o "status": returns the total size and number of buffers that are "busy"
- *      if @arg is true or "free" otherwise.
-*/
 static int numlua_buffer (lua_State *L) {
-  nBuffer *nb;
+  nl_Buffer *nb;
   static const char *const opts[] = {"release", "status", NULL};
   int opt = luaL_checkoption(L, 1, "status", opts);
   switch (opt) {
@@ -136,11 +133,11 @@ static int numlua_buffer (lua_State *L) {
       int status = lua_toboolean(L, 2);
       int i, l, n, size;
       nl_getbuffertable(L);
-      l = luaL_getn(L, -1);
+      l = lua_rawlen(L, -1);
       n = size = 0;
       for (i = 1; i <= l; i++) {
         lua_rawgeti(L, -1, i);
-        nb = (nBuffer *) lua_touserdata(L, -1);
+        nb = (nl_Buffer *) lua_touserdata(L, -1);
         if (nb->busy == status) {
           n++;
           size += nb->size;
@@ -156,40 +153,53 @@ static int numlua_buffer (lua_State *L) {
 }
 
 
-/* numlua.type(obj) */
 static int numlua_type (lua_State *L) {
   luaL_checkany(L, 1);
   if (lua_type(L, 1) == LUA_TUSERDATA) {
     if (lua_getmetatable(L, 1)) {
       lua_getfield(L, -1, "__type");
-      if (lua_isstring(L, -1)) return 1;
+      if (!lua_isnil(L, -1)) return 1;
     }
   }
   lua_pushstring(L, luaL_typename(L, 1));
   return 1;
 }
 
+int nl_opmode = 0; /* in-place? */
+static int numlua_opmode (lua_State *L) {
+  if (lua_gettop(L) > 0) { /* set mode? */
+    lua_pushboolean(L, nl_opmode);
+    nl_opmode = lua_toboolean(L, 1);
+  }
+  else lua_pushboolean(L, nl_opmode);
+  return 1;
+}
+
+
 static const luaL_Reg numlua_func[] = {
   {"buffer", numlua_buffer},
   {"type", numlua_type},
+  {"opmode", numlua_opmode},
   {NULL, NULL}
 };
 
+
+
+
 NUMLUA_API int luaopen_numlua_base (lua_State *L) {
-  if (nl_isloaded(L, NUMLUA_LIBNAME)) return 1;
   /* init buffer table */
-  lua_pushlightuserdata(L, NBUFFER);
+  lua_pushlightuserdata(L, NL_BUFFER);
   lua_newtable(L);
   lua_createtable(L, 0, 1);
   lua_pushliteral(L, "v");
   lua_setfield(L, -2, "__mode");
-  lua_pushlightuserdata(L, NBUFFER_MT);
+  lua_pushlightuserdata(L, NL_BUFFER_MT);
   lua_pushvalue(L, -2);
-  lua_rawset(L, LUA_REGISTRYINDEX); /* reg[NBUFFER_MT] = mt */
+  lua_rawset(L, LUA_REGISTRYINDEX); /* reg[NL_BUFFER_MT] = mt */
   lua_setmetatable(L, -2);
-  lua_rawset(L, LUA_REGISTRYINDEX); /* reg[NBUFFER] = buffer table */
+  lua_rawset(L, LUA_REGISTRYINDEX); /* reg[NL_BUFFER] = buffer table */
   /* register base lib */
-  luaL_register(L, NUMLUA_LIBNAME, numlua_func);
+  luaL_newlib(L, numlua_func);
   lua_pushliteral(L, NUMLUA_VERSION);
   lua_setfield(L, -2, "_VERSION");
   return 1;
@@ -198,15 +208,24 @@ NUMLUA_API int luaopen_numlua_base (lua_State *L) {
 static const luaL_Reg numlua_modules[] = {
   {NUMLUA_LIBNAME,  luaopen_numlua_base},
   {COMPLEX_LIBNAME, luaopen_numlua_complex},
-  {MATRIX_LIBNAME, luaopen_numlua_lmatrix},
   {FFT_LIBNAME, luaopen_numlua_fft},
+  {MATRIX_LIBNAME, luaopen_numlua_lmatrix},
   {RNG_LIBNAME, luaopen_numlua_rng},
   {STAT_LIBNAME, luaopen_numlua_stat},
+  {MATHX_LIBNAME, luaopen_numlua_mathx},
   {NULL, NULL}
 };
 
 NUMLUA_API int luaopen_numlua (lua_State *L) {
-  nl_requiredeps(L, NULL, numlua_modules); /* call submodules */
+  const luaL_Reg *mod;
+  for (mod = numlua_modules; mod->func; mod++) {
+    nl_require(L, mod->name, mod->func, 1);
+    lua_pop(L, 1);
+  }
+  lua_pushglobaltable(L);
+  lua_getfield(L, -1, "require");
+  lua_pushliteral(L, "numlua.matrix");
+  lua_call(L, 1, 0);
   return 0;
 }
 

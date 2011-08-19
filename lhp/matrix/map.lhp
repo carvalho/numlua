@@ -1,0 +1,12 @@
+Help [=[
+
+matrix.map(m1, m2, ..., mn, f)
+------------------------------
+
+Sets, in element-order, the i-th entry in `m1` _in-place_ to
+
+        m1[i] = f(m1[i], m2[i], ..., mn[i])
+
+if the returned value is a number or complex, where `m2`, ..., `mn` are all
+conformable to `m1`.
+]=]

@@ -1,0 +1,8 @@
+Help [=[
+
+matrix.cross(a, b [, inplace])
+------------------------------
+
+Computes the cross product of ternary vectors `a` and `b` in-place in `a` if
+`inplace` is **true**.
+]=]

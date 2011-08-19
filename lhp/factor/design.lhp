@@ -1,0 +1,28 @@
+Help [=[
+
+factor.design(f, [ref])
+-----------------------
+
+Retuns design matrix for factor `f`. If `ref` is zero (default value) then no
+contrasts are assumed; otherwise, return a "sum to zero" contrast matrix with
+`ref` as reference level.
+
+Example:
+
+        > f = stat.factor{"a", "c", "a", "a", "b", "c"}
+        > print(f:design():pretty())
+           1   0   0
+           0   1   0
+           1   0   0
+           1   0   0
+           0   0   1
+           0   1   0
+        > print(f:design(2):pretty())
+            1    1    0
+           -1    1   -1
+            1    1    0
+            1    1    0
+            0    1    1
+           -1    1   -1
+
+]=]

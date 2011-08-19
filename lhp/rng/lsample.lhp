@@ -1,0 +1,9 @@
+Help [=[
+
+rng.lsample(m [, normalized])
+-----------------------------
+
+Returns a sample from 1 to `m:size"*"` with log-weights specified by the
+entries in the matrix `m`. If `normalized` is **true**, the entries of `m` are
+considered to be normalized, that is, it is assumed that `m:exp():sum() == 1`.
+]=]

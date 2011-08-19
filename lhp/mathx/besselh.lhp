@@ -1,0 +1,22 @@
+Help [=[
+
+mathx.besselh(nu, z, secondkind, scaling [, n])
+-----------------------------------------------
+
+Returns a `n` member sequence of complex Hankel (Bessel) functions
+_CY(j) = H(m, nu + j - 1, z)_ where _m = 2_ if `secondkind` is **true** or
+_m = 1_ otherwise, with nonnegative orders _nu + j - 1_ for _j = 1, ...,
+n_ and complex _z ~= 0_ in the cut plane _-pi < arg(z) < pi_. The size of
+the sequence `n` defaults to 1. A completion `status` is also returned.
+
+If `scaling` is **true**, returns _CY(j) * exp(-mm * z * I)_, where
+_mm = 3 - 2 * m_ and _I_ is the imaginary unit. The scaling removes the
+exponential behavior in both the upper and lower half planes.
+
+If `status` is **true**, the return is normal, that is, the computation
+completed without errors, underflows, or overflows; otherwise, `status` is
+an error message. If no computation is performed, **nil** is returned.
+
+__See also__: `mathx.besseli`, `mathx.besselj`, `mathx.besselk`,
+               `mathx.bessely`.
+]=]

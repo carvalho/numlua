@@ -1,0 +1,10 @@
+Help [=[
+
+rng.rbeta(a, b [, dest])
+------------------------
+
+Returns random deviates from the beta distribution with shape parameters
+`a` (`a > 0`) and `b` (`b > 0`).
+
+__See also__: `stat.dbeta`
+]=]

@@ -1,0 +1,11 @@
+Help [=[
+
+stat.dhyper(x, r, b, n)
+stat.phyper(x, r, b, n)
+-----------------------
+
+Computes the probability mass function (`dhyper`) and cumulative distribution
+function (`phyper`) for the *hypergeometric* distribution with parameters
+`r, b >= 0` and `0 <= n <= r + b`. The density is given by
+`choose(r, x) * choose(b, n - x) / choose(r + b, n)` for `x = 0, ..., n`.
+]=]

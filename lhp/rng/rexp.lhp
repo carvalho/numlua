@@ -1,0 +1,10 @@
+Help [=[
+
+rng.rexp([av [, dest]])
+-----------------------
+
+Returns random deviates from the exponential distribution with mean `av`
+(defaults to one).
+
+__See also__: `stat.dexp`
+]=]

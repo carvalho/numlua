@@ -1,0 +1,8 @@
+Help [=[
+
+mathx.lse(x1, x2)
+-----------------
+
+Computes the "soft max" of `x1` and `x2`, the log sum of exps
+`log(exp(x1) + exp(x2))`.
+]=]

@@ -1,0 +1,16 @@
+Help [=[
+
+rng.rmvnorm(m, S [, dest])
+--------------------------
+
+Returns random deviates from the multivariate normal distribution with mean
+`m`, a real vector of size `n`, and "standard deviation" `S` -- either a
+square matrix of order `n`, taken as the lower triangular Cholesky
+decomposition of the variance-covariance matrix, or a positive real vector
+of size `n` representing the square root of the diagonal of the
+variance-covariance matrix.
+
+Returns `S * u + m`, where `u` is sampled from `N(0, I_n)`.
+
+__See also__: `matrix.chol`, `rng.rnorm`
+]=]

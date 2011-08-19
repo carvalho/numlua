@@ -1,0 +1,19 @@
+Help [=[
+
+matrix.norm(m [, what])
+-----------------------
+
+Computes the norm of `m` according to parameter `what`:
+
+  * if `what` is a number `p`, computes the Lp norm
+  * `what == "m"` or `what == "M"`: computes `max(abs(m))`
+  * `what == "o"` or `what == "O"`: computes the one norm, that is,
+    the maximum column sum if `m` is a two-dimensional matrix
+  * `what == "i"` or `what == "I"`: computes the infinity (sup) norm, that is,
+    the maximum row sum if `m` is a two-dimensional matrix
+  * `what == "f"` or `what == "F"`: computes the Frobenius norm
+
+The default value for `what` is `"F"`. If `what == "m"`, `what == "M"`,
+`what == "i"`, or `what == "I"`, also returns the index the maximizes the
+norm.
+]=]

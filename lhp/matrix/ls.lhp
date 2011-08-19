@@ -1,0 +1,44 @@
+Help [=[
+
+matrix.ls (A, b [, svd [, tol [, inplace]]])
+--------------------------------------------
+
+Computes the least-squares solution to the linear system `A * x = b`, that is,
+finds `x` that minimizes the 2-norm of `b - A * x`, where `A` is a `m`-by-`n`
+matrix. Parameter `b` can be a (`m`-by-`nrhs`) matrix containing many
+right-hand side vectors as columns.
+
+If `svd` is **true**, the solution is found using a singular value
+decomposition; otherwise, a QR factorization is applied. The effective rank of
+`A` is relative to `tol`, which defaults to `max(m, n) * mathx.eps` (see
+Example in `matrix.svd` for details).
+
+If `inplace` is **true**, the solution is returned in `b` if the system is
+not underdetermined, that is, if `A` has at least as many rows as columns. In
+this case, `b:slice(1,n)` contains the solutions `x` and the sum of squares
+for the `i`-th column of `b:slice(n+1, m)` is the residual sum of squares for
+the solution of the `i`-th right-hand side.
+
+The solution and the effective rank are returned; in addition, if `svd` is
+ **true**, the singular values of `A` are also returned (as a vector).
+
+Example:
+
+        -- basic LS linear model fitting
+        function matrix.lm (a, b, svd)
+          local m, n = a:shape()
+          assert(m >= n, "system is underdetermined")
+          assert(b:size"#" == 1, "single RHS expected")
+          local x, rank = ls(a, b, svd)
+          -- report summary statistics
+          local coef = x:slice(1, n)
+          local rss = (b - a * coef):norm() ^ 2
+          local rss0 = (b - b:sum() / m):norm() ^ 2
+          local df = m - rank
+          local F = df / (rank - 1) * (rss0 / rss - 1)
+          local pvalue = 1 - stat.pf(F, rank - 1, df)
+          return {coef = coef, rss = rss, df = df, F = F, pvalue =  pvalue}
+        end
+
+__See also__: `matrix.svd`, `matrix.qr`
+]=]

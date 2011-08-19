@@ -1,0 +1,7 @@
+Help [=[
+
+matrix.col(m, i)
+----------------
+
+Returns a _reference_ to the `i`-th column of the two-dimensional matrix `m`.
+]=]

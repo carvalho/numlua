@@ -1,0 +1,15 @@
+Help [=[
+
+stat.dgamma(x, shape [, rate])
+stat.pgamma(x, shape [, rate])
+stat.qgamma(p, shape [, rate])
+-------------------------------
+
+Computes the density (`dgamma`), cumulative distribution function (`pgamma`),
+and inverse cdf (`qgamma`) for the *gamma* distribution with parameters
+ `shape >= 0` and `rate >= 0`. The default value for `rate` is one. A gamma
+distribution with shape `s` and rate `r` has density `r^s / G(s) * x^(s - 1) *
+exp(-r * x)` where `G` is the gamma function, for `x >= 0`.
+
+__See also__: `mathx.gamma`
+]=]

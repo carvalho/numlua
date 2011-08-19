@@ -1,0 +1,8 @@
+Help [=[
+
+mathx.log1pe(x)
+---------------
+
+Computes `log(1 + exp(x))` by avoiding calls to `log` and `exp` when `abs(x) <
+eps`.
+]=]

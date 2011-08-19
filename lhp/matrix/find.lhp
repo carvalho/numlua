@@ -1,0 +1,21 @@
+Help [=[
+
+matrix.find(m [, cond [, reverse]])
+-----------------------------------
+
+Returns the first element-order index in `m` whose respective entry
+satisfies `cond`. If `reverse` is **true**, returns the first occurrence in
+`m` that does _not_ satisfy `cond`. If no entry in `m` satisfies `cond`,
+**nil** is returned. Note that matrix `m` is traversed only up to the first
+successful entry.
+
+Examples:
+
+        function any (m, cond)
+          return matrix.find(m, cond) ~= nil
+        end
+
+        function all (m, cond)
+          return matrix.find(m, cond, true) == nil
+        end
+]=]

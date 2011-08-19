@@ -1,0 +1,7 @@
+Help [=[
+
+matrix.iscomplex(m)
+-------------------
+
+Returns **true** if `m` is complex and **false** otherwise.
+]=]

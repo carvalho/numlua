@@ -1,0 +1,12 @@
+Help [=[
+
+stat.dchisq(x, df [, pnonc])
+stat.pchisq(x, df [, pnonc])
+stat.qchisq(p, df [, pnonc])
+----------------------------
+
+Computes the density (`dchisq`), cumulative distribution function (`pchisq`),
+and inverse cdf (`qchisq`) for the *chi-squared* distribution with `df > 0`
+degrees of freedom and non-centrality parameter `pnonc`. If `pnonc ~= 0`, `df`
+can be zero.
+]=]

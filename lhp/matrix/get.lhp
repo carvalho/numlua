@@ -1,0 +1,22 @@
+Help [=[
+
+matrix.get(m, i1 [, i2 [... [, in]]])
+matrix.get(m, eoindex)
+----------------------
+
+Returns a submatrix of `m`. There are two ways of specifying the submatrix:
+
+  * Using the indexes `i1`, ..., `in`, where `n` is `m:size"#"`, the number
+    of dimensions in `m`: returns the submatrix `m[i1]...[in]`. In
+    particular, `get(m, i1, ..., in)` returns the entry `m(i1, ..., in)`,
+    and `m[i]` returns the `i`-th "row" of `m`.
+    Indices that are greater than their dimension or negative are circularly
+    remapped to the correct range: if `i` is the index for dimension `d`, `i`
+    is mapped to `(i - 1) % d + 1` if `i > 0` and `(i + 1) % n + n` if `i <
+    0`. Null indices are not allowed.
+  * Providing an _element-order_ vector `eoindex`; in this case, returns the
+    respective entries in `m`, that is, returns `v` such that
+    `v[i] = m[eoindex[i]]` for `i=1, ..., #eoindex`.
+
+__See also__: `matrix.set`
+]=]
