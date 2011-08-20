@@ -57,3 +57,6 @@ register(rng, "r") -- conflicts with matrix: new, copy
 type = numlua.type -- override
 opmode = numlua.opmode
 
+-- set matrix __tostring to `pretty`: more convenient for interpreter
+getmetatable(matrix(1)).__tostring = matrix.pretty
+
