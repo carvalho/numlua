@@ -249,9 +249,11 @@ F1(tanh)
 
 static int complexMT__call (lua_State *L) {
   /* complex, or one or two numbers on stack */
-  nl_Complex *c = pushcomplex(L, tocomplex(L, 2, NULL));
-  if (lua_isnumber(L, 3)) /* set imag? */
-    *c = creal(*c) + lua_tonumber(L, 3) * I;
+  nl_Complex *c;
+  lua_remove(L, 1); /* class table */
+  c = pushcomplex(L, checkcomplex(L, 1));
+  if (lua_isnumber(L, 2)) /* set imag? */
+    *c = creal(*c) + lua_tonumber(L, 2) * I;
   return 1;
 }
 
