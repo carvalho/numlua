@@ -1514,7 +1514,7 @@ static int nl_ls (lua_State *L, nl_Matrix *a, nl_Matrix *b, nl_Matrix *s,
       x = pushmatrix(L, b->iscomplex, 1, &n, 1, n, NULL, NULL);
     else {
       x = pushmatrix(L, b->iscomplex, 2, NULL, 1, nrhs * n, NULL, NULL);
-      x->dim[0] = nrhs; x->dim[1] = n;
+      x->dim[0] = n; x->dim[1] = nrhs; // A: m by n, x n by nrhs, b m by nrhs.
     }
     if (b->iscomplex) {
       nl_Complex *pb = CPX(bufb->data.bnum);
