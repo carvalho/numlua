@@ -25,6 +25,7 @@
 #define NUMLUA_API extern
 
 #if LUA_VERSION_NUM <= 501
+#define lua_number2int(i,n) ((i)=(int)(n))
 #define lua_rawlen lua_objlen
 #define nl_register(L,l,n) luaL_openlib(L,NULL,l,n)
 #define luaL_newlibtable(L,l) \
